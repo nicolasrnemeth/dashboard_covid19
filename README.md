@@ -1,1 +1,1 @@
-# Assignment 5: Visualization Tool for Covid Data
+# Assignment 5: Visualization Dashboard for Covid-related Data
