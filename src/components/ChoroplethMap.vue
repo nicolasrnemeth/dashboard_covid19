@@ -27,14 +27,14 @@ export default {
   },
   mounted() {
     // Use the following map geoJSON object ("mapStatesUSA") for your projection
-    console.log(mapWorld);
+    //console.log(mapWorld);
   },
   methods: {
     // Draw USA Map
     createMap() {
       if (this.$refs.chart) {
         this.svgWidth = this.$refs.chart.clientWidth;
-        this.svgHeight = this.scatterPlotHeight;
+        //this.svgHeight = this.scatterPlotHeight;
       }
       let projection = d3.geoAlbersUsa()
                          .scale(this.svgWidth*1.2)
