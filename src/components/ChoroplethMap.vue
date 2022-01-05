@@ -1,8 +1,8 @@
 <template>
-  <div class="vis-component" ref="chart">
-    <svg class="main-svg" :width="svgWidth" :height="svgHeight" ref="mainSvg">
-      <rect id="empty-area" ref="emptyArea"></rect>
-      <g id="choropleth-map" ref="choroplethMap"></g>
+  <div class="view-A" ref="viewA">
+    <svg class="svg-A" :width="svgWidth" :height="svgHeight" ref="svgA">
+        <rect id="empty-area" ref="emptyArea"></rect>
+        <g id="choropleth-map" ref="choroplethMap"></g>
     </svg>
   </div>
 </template>
@@ -21,55 +21,44 @@ export default {
       svgWidth: 500,
       svgHeight: 500,
       svgPadding: {
-        top: 20, right: 20, bottom: 20, left: 20,
+        top: 0, right: 0, bottom: 0, left: 0,
       },
     }
   },
   mounted() {
-    // Use the following map geoJSON object ("mapStatesUSA") for your projection
-    //console.log(mapWorld);
+    this.createMap();
+    this.createEmptyArea();
   },
   methods: {
-    // Draw USA Map
+    // Draw World Map
     createMap() {
-      if (this.$refs.chart) {
-        this.svgWidth = this.$refs.chart.clientWidth;
-        //this.svgHeight = this.scatterPlotHeight;
+      if (this.$refs.viewA) {
+        this.svgWidth = document.body.clientWidth*0.41666667;
+        this.svgHeight = document.body.clientHeight*0.475;
       }
-      let projection = d3.geoAlbersUsa()
-                         .scale(this.svgWidth*1.2)
-                         .translate([this.svgWidth/2*1.07,this.svgHeight/2]);
+      let projection = d3.geoMercator()
+                         .scale(this.svgWidth*0.16)
+                         .translate([this.svgWidth/2,this.svgHeight/1.6]);
       let path_generator = d3.geoPath().projection(projection);
-      let usaMap = d3.select(this.$refs.choroplethMap)
+      let worldMap = d3.select(this.$refs.choroplethMap)
       
-      usaMap.selectAll('path')
-            .data(mapStatesUSA.features)
+      worldMap.selectAll('path')
+            .data(mapWorld.features)
             .join('path')
             .attr('class', 'paths')
             .attr('d', path_generator)
-            .attr('id', d => d.properties.name.replaceAll(" ", "")+"_path")
-            .on("click", (_, d) => this.handleStateClick(d.properties.name))
+            .attr('id', d => d.properties.iso_a3.replaceAll(" ", "")+"_path")
+            //.on("click", (_, d) => this.handleStateClick(d.properties.name))
             .style('fill', 'white')
             .style('stroke', 'black')
             .style('stroke-width', 1.1)
-            .style('cursor', 'pointer')
-            // Add tooltips displaying state name
-            .append('title')
-            .attr('class', 'tooltip-map')
-            .text(d => "hightlight " + d.properties.name);
+            //.style('cursor', 'pointer')
       
-      this.updateColor();
-    },
-    // Pass information of selected states forward to store
-    handleStateClick(stateId) {
-      this.$store.commit("changeSelectedState", stateId.replaceAll(" ", ""));
+      //this.updateColor();
     },
     // Add color scheme to states based on selected bivariate color scheme
     updateColor() {
-      for (let state of this.stateColorIndexPairs) {
-        d3.select("#"+state.id)
-          .style("fill", this.paletteColor[state.colorIndex]);
-      }
+      return;
     },
     // increase the intensity of the color
     increaseColorSaturation(color, k=1.25) {
@@ -79,55 +68,27 @@ export default {
     // Draw the empty area behind the usa map
     createEmptyArea() {
       let emptyArea = d3.select(this.$refs.emptyArea);
-      emptyArea.attr("height", (this.svgHeight - this.svgPadding.top - this.svgPadding.bottom)+2)
+      emptyArea.attr("height", this.svgHeight)
                .attr("width", this.svgWidth)
-               .attr('y', this.svgPadding.top+1)
-               .on("click", this.handleEmptyAreaClick)
-               .style('cursor', "pointer")
-               .append('title')
-               .attr('class', 'tooltip-map')
-               .text("undo highlighting");
+               //.on("click", this.handleEmptyAreaClick)
+               //.style('cursor', "pointer")
     },
     // Deselect all selected states and therefore remove highlighting in scatterplot
     handleEmptyAreaClick() {
-      this.$store.commit("clearSelectedState");
-    },
-    // Define function to update brush highlight when data changes
-    updateBrushHighlight() {
-      d3.selectAll('.paths').style("fill", "black").style("fill-opacity", 0.75);
-      for (let stateId of this.brushedStates) {
-        d3.select('#'+stateId)
-          .style("fill", this.paletteColor[this.stateColorIndexPairs.find(d => d.id == stateId).colorIndex]);
-      }
+      return;
     },
   },
   computed: {
-    selectedStates: {
+    selectedCountries: {
       get() {
-        return this.$store.getters.selectedStates;
-      }
-    },
-    // Individual properties are combined using template literals for
-    // only having to watch one computed property instead of 4
-    paletteColor_stateColorIndexPairs_brushedStates: {
-      get() {
-        return `${this.paletteColor},${this.stateColorIndexPairs},${this.brushedStates},${this.scatterPlotIsBrushed}`;
+        return 0;
       }
     },
   },
   watch: {
-    // If any of the data changes update highlightings or remove them accordingly
-    paletteColor_stateColorIndexPairs_brushedStates: {
+    selectedCountries: {
       handler() {
-        if(this.brushedStates.length > 0) {
-          this.updateBrushHighlight();
-        } else {
-          if(this.scatterPlotIsBrushed) {
-            d3.selectAll('.paths').style("fill", "black").style("fill-opacity", 0.75);
-          } else {
-              this.updateColor();
-            }
-        }
+        return;
       },
       deep: true,
       immediate: true,
@@ -138,4 +99,9 @@ export default {
 </script>
 
 <style>
+
+#empty-area {
+  fill: rgb(250, 250, 250);
+}
+
 </style>

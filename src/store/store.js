@@ -6,15 +6,14 @@ Vue.use(Vuex);
 
 const store = new Vuex.Store({
   state: {
-    
+    covidData: [],
+    pageWidth: 500,
+    pageHeight: 500,
   },
   mutations: {
-    changeSelectedYear (state, year) {
-      state.selectedYear = year;
-    },  
+
   },
   getters: {
-    selectedYear: (state) => state.selectedYear,
     educationRates (state) {
       let result = [];
       for (let i = 0; i < state.educationRates.length; i++) {
@@ -30,8 +29,9 @@ const store = new Vuex.Store({
   },
   actions: {
     loadData({state}) {
-      d3.csv('./usa_ba-degree-or-higher_2006-2019.csv').then((data) => { 
-        state.educationRates = data;
+      d3.json('https://covid.ourworldindata.org/data/owid-covid-data.json').then((data) => { 
+        state.covidData = data;
+        console.log("hello");
       })
     },
   }
