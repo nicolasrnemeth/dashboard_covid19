@@ -18,10 +18,7 @@
           </div>
         </div>
         <div class="col-md-2">
-          <div class="control-board">
-            <!--<ControlBoard/>-->
-            {controlboard}
-          </div>
+          <ControlBoard/>
         </div>
       </div>
     </div>
@@ -33,13 +30,12 @@ import ChoroplethMap from './components/ChoroplethMap.vue';
 import MultipleLineChart from './components/MultipleLineChart.vue';
 import ScatterPlot from './components/Scatterplot.vue';
 import LineChart from './components/LineChart.vue';
-//import ControlBoard from './components/ControlBoard.vue';
+import ControlBoard from './components/ControlBoard.vue';
 
 export default {
   name: 'App',
   components: {
-    ChoroplethMap, ScatterPlot, LineChart, MultipleLineChart
-    //ControlBoard
+    ChoroplethMap, ScatterPlot, LineChart, MultipleLineChart, ControlBoard
   },
   mounted() {
     this.$store.dispatch('loadData');
@@ -75,19 +71,14 @@ export default {
 }
 
 .col-md-2, .col-md-10 {
-  padding: 0px;
+  padding: 0px !important;
 }
 
 .app-title {
   margin-right: -15px;
   margin-left: -15px;
   background-color: rosybrown;
-}
-
-.control-board {
-  margin-left: -15px;
-  margin-right: -15px;
-  background-color: rgb(128, 128, 128);
+  border: 1px solid #000000;
 }
 
 </style>

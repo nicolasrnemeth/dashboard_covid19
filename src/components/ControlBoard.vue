@@ -1,21 +1,34 @@
 <template>
-  <div>
-    <label for="range-year">Year Selection</label>
-    <b-form-input id="range-year" v-model="selectedYear" type="range" min="2006" max="2019"></b-form-input>
-    <div class="mt-2">Selected Year: {{ selectedYear }}</div>
-  </div>
+  <div class="view-E" ref="viewE">
+    {controlboard}
+    <!--<svg class="svg-E" :width="svgWidth" :height="svgHeight" ref="svgE">-->
+      <!-- placeholder -->
+    <!--</svg>-->
+  </div> 
 </template>
 
+
+
 <script>
+
 export default {
-  name: 'YearSlider',
+  name: 'ControlBoard',
   props: {
   },
   data() {
     return {
+      svgWidth: 500,
+      svgHeight: 500,
+      svgPadding: {
+        top: 0, right: 0, bottom: 30, left: 0,
+      },
     }
   },
   mounted() {
+    if (this.$refs.svgE) {
+      this.svgWidth = document.body.clientWidth*0.16666667;
+      this.svgHeight = document.body.clientHeight;
+    }
   },
   methods: {
   },
@@ -32,8 +45,17 @@ export default {
   watch: {
   },
 }
+
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
+.view-E {
+  width: 16.666667vw;
+  height: calc(100vh - 8px);
+  background-color: rgb(128, 128, 128);
+  border: 1px solid #000000;
+}
+
 </style>

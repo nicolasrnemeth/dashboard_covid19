@@ -38,8 +38,8 @@ export default {
     // Draw scatterplot including axes points and bivariate color scheme
     createChart() {
       if (this.$refs.viewC) {
-        this.svgWidth = window.innerWidth*0.41666667;
-        this.svgHeight = window.innerHeight*0.475;
+        this.svgWidth = document.body.clientWidth*0.41666667;
+        this.svgHeight = document.body.clientHeight*0.475;
       }
 
       d3.select(this.$refs.scatterPlot)
@@ -160,7 +160,11 @@ export default {
 <style>
 
 .view-C {
+  width: 41.666667vw;
+  height: 47.5vh;
+  margin-left: 15px;
   background-color: rgb(231, 249, 255);
+  border: 1px solid #000000;
 }
 
 </style>

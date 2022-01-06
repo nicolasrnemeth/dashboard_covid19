@@ -18,7 +18,7 @@
 
 <script>
 
-import * as d3 from 'd3';
+//import * as d3 from 'd3';
 
 export default {
   name: 'MultipleLineChart',
@@ -26,7 +26,7 @@ export default {
   },
   data() {
     return {
-      svgWidth: 0,
+      svgWidth: 500,
       svgHeight: 500,
       svgPadding: {
         top: 10, right: 10, bottom: 30, left: 45,
@@ -40,8 +40,8 @@ export default {
   methods: {
     createChart() {
       if (this.$refs.viewB) {
-        this.svgWidth = window.innerWidth*0.41666667;
-        this.svgHeight = window.innerHeight*0.475;
+        this.svgWidth = document.body.clientWidth*0.41666667;
+        this.svgHeight = document.body.clientHeight*0.475;
       }
 
     },
@@ -59,7 +59,10 @@ export default {
 <style>
 
 .view-B {
-  background-color: rgb(231, 249, 255);
+  width: 41.666667vw;
+  height: 47.5vh;
+  background-color: rgb(211, 255, 215);
+  border: 1px solid #000000;
 }
 
 </style>
