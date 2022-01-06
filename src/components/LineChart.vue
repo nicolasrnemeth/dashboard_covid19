@@ -1,213 +1,158 @@
 <template>
-  <div class="vis-component" id="linePlot" ref="chart">
-    <svg class="main-svg" :width="svgWidth" :height="svgHeight" ref="mainSvg">
-      <g class="chart-group" ref="chartGroup">
+  <div class="view-D" ref="viewD">
+    <svg class="svg-D" :width="svgWidth" :height="svgHeight" ref="svgD">
+      <g class="line-chart" ref="lineChart">
         <g class="axis axis-x" ref="xAxis"></g>
         <g class="axis axis-y" ref="yAxis"></g>
-        <g class="points-group" ref="pointsGroup"></g>
-        <rect id="toolTip"></rect>
+        <g class="line-group" ref="lineGroup"></g>
+        <g class="point-group" ref="pointGroup"></g>
+        <rect id="toolTip-D"></rect>
       </g>
     </svg>
   </div>
 </template>
-
-<!--
-// Reshape data for line plotting
-   let data_reshaped = new Array();
-   data.forEach(d => {
-      years.forEach(y => {
-         data_reshaped.push({
-            Year: toTime(y),
-            Gdp: +d[y],
-            State: d.State 
-         });
-      });
-   });
-   // Group entries by state
-   let data_grouped = d3.group(data_reshaped, d => d.State);
-
-   // Get maximum value of GDP
-   let maxGdp = d3.max(data_reshaped, d => d.Gdp);
-
-   // Scales
-   let scaleX = d3.scaleTime()
-                  .range([margin, width-250])
-                  .domain(year_extent);
-   let scaleY = d3.scaleLinear()
-                  .domain([0, maxGdp+4.5e05])
-                  .range([0.7*height-margin+20, 0]);
-   // Axes
-   let axisX = d3.axisBottom()
-                 .scale(scaleX);
-   let axisY = d3.axisLeft()
-                 .scale(scaleY)
-                 .tickFormat(d => ("$ " + d3.format(".1f")(d/1e06)));
-   
-   let axes = svg.append("g")
-                 .attr("class", "axes")
-                 .attr("transform", "translate(0,"+10+")");
-   // x-axis
-   axes.append("g")
-       .call(axisX)
-       .attr("class", "axes")
-       .attr("id", "axisX")
-       .attr("transform", "translate(0,"+(0.7*height-margin+20)+")");
-   // y-axis
-   axes.append("g").call(axisY).attr("transform", "translate("+margin+",0)")
-                               .attr("class", "axes");
-
-   // Labels
-   // x-axis
-   svg.append("g")
-      .append("text")
-      .attr("class", "label")
-      .text("Years")
-      .attr("x", "50%")
-      .attr("transform", "translate(0,"+(0.7*height-margin+80)+")")
-   // y-axis
-   svg.append("g")
-      .append("text")
-      .attr("class", "label")
-      .text("Nominal GDP (Trillions of current dollars)")
-      .attr("transform", "rotate(-90) translate(-190,35)")
-
-   // Specify line
-   let line = d3.line().x(d => scaleX(d.Year)).y(d => scaleY(d.Gdp));
-
-   // Plot lines 
-   svg.selectAll("lines")
-      .data(data_grouped)
-      .enter()
-      .append("path")
-      .attr("class", "lines_")
-      .attr("d", (d) => line(d[1]))
-      .attr("transform", "translate(0,10)")
-      .on("click", lineClick)
-      .on("mouseover", lineOver)
-      .on("mouseout", lineOut)
-      .style("cursor", "pointer")
-
-   // Define events
-   let selections = new Array(); // array to keep track of selected elements
-
-   function lineDblclick(event, d) {
-      let id_text = "#"+d[0].replaceAll(" ", "")+"_click";
-      d3.select(id_text).remove();
-
-      d3.select(this)
-        .on("dblclick", null)
-        .on("click", lineClick)
-        .on("mouseover", lineOver)
-        .on("mouseout", lineOut)
-        .style("stroke", "blue");
-
-      let index = selections.map(x => x.id).indexOf(id_text);
-      selections.splice(index, 1);
-   }
-
-   function lineClick(event, d) {
-      d3.select("#"+d[0].replaceAll(" ", "")).remove();
-
-      d3.select(this)
-        .on("mouseover", null)
-        .on("mouseout", null)
-        .on("click", null)
-        .on("dblclick", lineDblclick)
-        .style("stroke", "red");
-      
-      selections.push({
-         id: "#"+d[0].replaceAll(" ", "")+"_click",
-         line: this,
-         gdps: d[1].map(d => d.Gdp)
-      })
-
-      svg.append("text")
-         .attr("class", "state_names_click")
-         .attr("id", d[0].replaceAll(" ", "")+"_click")
-         .attr("y", get_position(selections.at(-1))+10)
-         .attr("x", width-2*margin-30)
-         .text(d[0]);
-   }
-
-   function lineOver(event, d) {
-      d3.select(this).style("stroke", "red")
-
-      svg.append("text")
-         .attr("class", "state_names")
-         .attr("id", d[0].replaceAll(" ", ""))
-         .attr("y", get_position({gdps: d[1].map(d => d.Gdp)})+10)
-         .attr("x", width-2*margin-30)
-         .text(d[0]);
-   }
-
-   function lineOut(event, d) {
-      d3.select(this).style("stroke", "blue");
-
-      d3.select("#"+d[0].replaceAll(" ", "")).remove();
-   }
--->
 
 <script>
 
 import * as d3 from 'd3';
 
 export default {
-  name: 'BarChart',
+  name: 'LineChart',
   props: {
   },
   data() {
     return {
-      svgWidth: 0,
+      svgWidth: 500,
       svgHeight: 500,
       svgPadding: {
-        top: 25, right: 20, bottom: 70, left: 40,
+        top: 10, right: 10, bottom: 30, left: 45,
       },
+      processed_data: [],
     }
   },
   mounted() {
-    this.drawChart();
+    this.process_data("people_fully_vaccinated_per_hundred");
+    this.createChart();
+    this.createAxesLabels();
   },
   methods: {
-    drawChart() {
-      if (this.$refs.chart) this.svgWidth = this.$refs.chart.clientWidth;
+    createChart() {
+      if (this.$refs.viewD) {
+        this.svgWidth = window.innerWidth*0.41666667;
+        this.svgHeight = window.innerHeight*0.475;
+      }
 
+      d3.select(this.$refs.lineChart)
+        .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
+      this.createXAxis();
+      this.createYAxis();
+      this.createLines();
+    },
+    createXAxis() {
+      let XAxis = d3.select(this.$refs.xAxis)
+      XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
+           .call(d3.axisBottom(this.xScale)/*.tickFormat(d => d)*/);
+    },
+    createYAxis() {
+      let YAxis = d3.select(this.$refs.yAxis);
+      YAxis.call(d3.axisLeft(this.yScale)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
+    },
+
+    createLines() {
+      // Group entries by iso_code
+      let grouped_data = d3.group(this.processed_data, d => d.iso_code);
+
+      // Specify line
+      let line = d3.line().x(d => this.xScale(d.date)).y(d => this.yScale(d.feature));
+   
+      // Plot lines
+      const lineGroup = d3.select(this.$refs.lineGroup)
+
+      lineGroup.selectAll("lines")
+               .data(grouped_data)
+               .enter()
+               .append("path")
+               //.attr("class", "lines")
+               .attr("d", (d) => line(d[1]))
+               .style("fill", "none")
+               .style("stroke", "black")
+               .style("stroke-width", 1.2)
+               //.attr("transform", "translate(0,10)")
+               //.on("click", lineClick)
+               //.on("mouseover", lineOver)
+               //.on("mouseout", lineOut)
+               //.style("cursor", "pointer");
+    },
+    createAxesLabels() {
+      let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
+      let translateY = this.svgHeight - this.svgPadding.top - this.svgPadding.bottom;
+
+      d3.select(this.$refs.yAxis)
+        .append('text')
+        .text("y-axis-label")
+        .attr('transform', 'rotate(-90)')
+        .attr('y', '-3.5em')
+        .attr('x', -0.5*translateY)
+        .style('text-anchor', 'middle')
+        .style('fill', 'black')
+        .style('font-weight', 'bold');
+    
+      d3.select(this.$refs.xAxis)
+        .append('text')
+        .text("x-axis-label")
+        .attr('x', 0.5*translateX)
+        .attr('y', '3em')
+        .style('fill', 'black')
+        .style('text-anchor', 'middle')
+        .style('font-weight', 'bold')
+    },
+    toTime(dateString) {
+      return d3.timeParse("%Y-%m-%d")(dateString);
+    },
+    dataExtent(feature) {
+      return d3.extent(this.processed_data, d => d[feature]);
+    },
+    process_data(feature) {
+      // Preprocess data
+      let processed_data = [];
+      for (let country of Object.keys(this.$store.state.covidData)) {
+        for (let day of this.$store.state.covidData[country].data) {
+          if (feature in day && day[feature] != undefined) {
+            processed_data.push({
+              iso_code: country,
+              date: this.toTime(day.date),
+              feature: day[feature],
+            });
+          }
+        }
+      }
+      this.processed_data = processed_data;
     },
   },
+
   computed: {
-    educationRates: {
-      get() {
-        return this.$store.getters.educationRates;
-      }
-    },
-    dataMax() {
-      return d3.max(this.educationRates, (d) => d.value);
-    },
-    dataMin() {
-      return d3.min(this.educationRates, (d) => d.value);
-    },
     xScale() {
-      return d3.scaleBand()
-        .rangeRound([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]).padding(0.1)
-        .domain(this.educationRates.map((d) => d.state));
+      return d3.scaleTime()
+               .domain(this.dataExtent("date"))
+               .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
     },
     yScale() {
       return d3.scaleLinear()
-        .rangeRound([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0])
-        .domain([this.dataMin > 0 ? 0 : this.dataMin, this.dataMax]);
-    },
+               .domain(this.dataExtent("feature"))
+               .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
+    }
   },
   watch: {
-    educationRates: {
-      handler() {
-        this.drawChart();
-      },
-      deep: true,
-    },
+    
   },
 }
 
 </script>
 
 <style>
+
+.view-D {
+  background-color: rgb(255, 209, 255);
+}
 
 </style>

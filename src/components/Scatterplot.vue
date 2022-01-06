@@ -1,15 +1,16 @@
 <template>
-  <div class="vis-component" id="scatterPlot" ref="chart">
-    <svg class="main-svg" :width="svgWidth" :height="svgHeight" ref="mainSvg">
-      <g class="chart-group" ref="chartGroup">
+  <div class="view-C" ref="viewC">
+    <svg class="svg-C" :width="svgWidth" :height="svgHeight" ref="svgC">
+      <g class="scatter-plot" ref="scatterPlot">
         <g class="axis axis-x" ref="xAxis"></g>
         <g class="axis axis-y" ref="yAxis"></g>
         <g class="points-group" ref="pointsGroup"></g>
-        <rect id="toolTip"></rect>
+        <rect id="toolTip-C"></rect>
       </g>
     </svg>
   </div>
 </template>
+
 
 <script>
 
@@ -24,154 +25,142 @@ export default {
       svgWidth: 500,
       svgHeight: 500,
       svgPadding: {
-        top: 20, right: 20, bottom: 20, left: 20,
+        top: 10, right: 10, bottom: 30, left: 45,
       },
     }
   },
   mounted() {
-     if (this.$refs.chart) {
-        this.svgWidth = this.$refs.chart.clientWidth;
-    }
     this.createChart();
     // Create axes labels only once to avoid overlaying multiple texts
-    // when year selections are changed
     this.createAxesLabels();
-    this.colorCountries();
   },
   methods: {
     // Draw scatterplot including axes points and bivariate color scheme
     createChart() {
-      d3.select(this.$refs.chartGroup)
+      if (this.$refs.viewC) {
+        this.svgWidth = window.innerWidth*0.41666667;
+        this.svgHeight = window.innerHeight*0.475;
+      }
+
+      d3.select(this.$refs.scatterPlot)
         .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
       this.createXAxis();
       this.createYAxis();
       this.createPoints();
-      this.createPalette();
     },
     createXAxis() {
       let XAxis = d3.select(this.$refs.xAxis)
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale).tickFormat(d => d));
+           .call(d3.axisBottom(this.xScale)/*.tickFormat(d => d)*/);
     },
     createYAxis() {
-      let YAxis = d3.select(this.$refs.yAxis)
-      YAxis.call(d3.axisLeft(this.yScale).tickFormat(d => (d3.format(".1f")(d/1e03) + " k")))
+      let YAxis = d3.select(this.$refs.yAxis);
+      YAxis.call(d3.axisLeft(this.yScale)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
     },
     createAxesLabels() {
-      let translateLabel = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
+      let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
+      let translateY = this.svgHeight - this.svgPadding.top - this.svgPadding.bottom;
+
       d3.select(this.$refs.yAxis)
         .append('text')
-        .text("Average Yearly Personal Income (in $)")
+        .text("y-axis-label")
         .attr('transform', 'rotate(-90)')
-        .attr('y', '-5em')
-        .attr('x', -0.5*translateLabel)
+        .attr('y', '-3.5em')
+        .attr('x', -0.5*translateY)
         .style('text-anchor', 'middle')
         .style('fill', 'black')
         .style('font-weight', 'bold');
     
       d3.select(this.$refs.xAxis)
         .append('text')
-        .text("Educational Attainment: Bachelor's Degree or Higher (in %)")
-        .attr('x', 0.5*translateLabel)
-        .attr('y', '3.5em')
+        .text("x-axis-label")
+        .attr('x', 0.5*translateX)
+        .attr('y', '3em')
         .style('fill', 'black')
         .style('text-anchor', 'middle')
-        .style('font-weight', 'bold');
+        .style('font-weight', 'bold')
     },
     createPoints() {
-      const pointsGroup = d3.select(this.$refs.pointsGroup)
+      const pointsGroup = d3.select(this.$refs.pointsGroup);
+      
       pointsGroup.selectAll('.points')
-                 .data(this.allData)
+                 .data(this.data_)
                  .join('circle')
                  .attr('class', 'points')
-                 .attr('id', d => d.state.replaceAll(" ", "")+"_point")
-                 .attr('cx', d => this.xScale(d.eduRate))
-                 .attr('cy', d => this.yScale(d.income))
-                 .attr('r', 4.5)
-                 .style('fill-opacity', 0)
-                 .style('stroke', 'black')
-                 .style('stroke-width', 1.8);
-      
-      d3.selectAll('title:not(.tooltip-map)').remove();
-      d3.selectAll('.points')
-        .append('title')
-        .text(d => {
-              return (
-                `${d.state}\n\nEducation: ${d.eduRate} %\nIncome: ${d.income} $`
-              );
-        });
+                 //.attr('id', d => d..replaceAll(" ", "")+"_point")
+                 .attr('cx', d => this.xScale(d.gdp))
+                 .attr('cy', d => this.yScale(d.cardiovasc))
+                 .attr('r', 2)
+                 //.style('fill-opacity', 0)
+                 .style('fill', 'red')
+                 //.style('stroke', 'black')
+                 //.style('stroke-width', 1.2);
     },
-    // Round the values of the axes at both ends to multiples of in my case 5
-    roundUpToMultipleOfX(value, x, factor=1.05) {
+    // Round the values of the axes at both ends to multiples of x
+    roundUpToMultipleOfX(value, x, factor=1) {
       return Math.ceil( (factor * value) / x) * x;
     },
-    // see above --> done to have more consistent axes when years are changed
-    roundDownToMultipleOfX(value, x, factor=0.95) {
+    // see above --> done to have more consistent axes
+    roundDownToMultipleOfX(value, x, factor=1) {
       return Math.floor( (factor * value) / x) * x;
     },
-    // update the colors of the states in the map
+    // update colors of the countries on the map
     colorCountries() {
 
     },
-    // the function increaseColorSaturation was inspired by: https://observablehq.com/@d3/working-with-color
-    increaseColorSaturation(color, k=1.25) {
-      const {l, c, h} = d3.lch(color);
-      return d3.lch(l, c + 18 * k, h).formatHex();
+    dataExtent(feature) {
+      return d3.extent(this.data_, d => d[feature]);
     },
   },
   computed: {
-    allData: {
+    selectedCountries: {
       get() {
-        return this.$store.getters.allData;
-      },
-    },
-    selectedStates: {
-      get() {
-        return this.$store.getters.selectedStates;
+        return this.$store.getters.selectedCountries;
       }
     },
-    dataMax_income() {
-      return d3.max(this.allData, d => d.income);
-    },
-    dataMin_income() {
-      return d3.min(this.allData, d => d.income);
+    data_: {
+      get() {
+        let _data_ = [];
+        let count = 0;
+        for (let elem of Object.values(this.$store.state.covidData)) {
+          if (isNaN(elem.gdp_per_capita) || isNaN(elem.cardiovasc_death_rate)) continue;
+          if (count == 30) break;
+          _data_.push(
+            {
+              gdp: elem.gdp_per_capita,
+              cardiovasc: elem.cardiovasc_death_rate
+            }
+          );
+          count++;
+        }
+        return _data_;
+      }
     },
     xScale() {
+      //let roundFactor = (maxVal+1e-06).toString().indexOf('.')/100;
       return d3.scaleLinear()
-               .domain([this.roundDownToMultipleOfX(this.dataMin_eduRate, 5), 
-                        this.roundUpToMultipleOfX(this.dataMax_eduRate, 5)])
+               .domain(this.dataExtent("gdp"))
                .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
     },
     yScale() {
+      // Evaluate rounding factor depending on the magnitude of the input numbers
+      //let roundFactor = (maxVal+1e-06).toString().indexOf('.')/100;
       return d3.scaleLinear()
-               .domain([this.roundDownToMultipleOfX(this.dataMin_income, 5*1e03), 
-                        this.roundUpToMultipleOfX(this.dataMax_income, 5*1e03)])
+               .domain(this.dataExtent("cardiovasc"))
                .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
     },
   },
   watch: {
-    allData: {
-      handler() {
-        this.createChart();
-      },
-      deep: true,
-      immediate: true,
-    },
-    selectedStates: {
-      handler() {
-        if (this.selectedStates.length > 0) {
-          this.highlightSelectedStates();
-        } else {
-          this.removeHightlighting();
-        }
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
+
+  }
 }
 
 </script>
 
 <style>
+
+.view-C {
+  background-color: rgb(231, 249, 255);
+}
+
 </style>

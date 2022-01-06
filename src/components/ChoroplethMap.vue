@@ -3,6 +3,7 @@
     <svg class="svg-A" :width="svgWidth" :height="svgHeight" ref="svgA">
         <rect id="empty-area" ref="emptyArea"></rect>
         <g id="choropleth-map" ref="choroplethMap"></g>
+        <rect id="toolTip-A"></rect>
     </svg>
   </div>
 </template>
@@ -33,8 +34,8 @@ export default {
     // Draw World Map
     createMap() {
       if (this.$refs.viewA) {
-        this.svgWidth = document.body.clientWidth*0.41666667;
-        this.svgHeight = document.body.clientHeight*0.475;
+        this.svgWidth = window.innerWidth*0.41666667;
+        this.svgHeight = window.innerHeight*0.475;
       }
       let projection = d3.geoMercator()
                          .scale(this.svgWidth*0.16)

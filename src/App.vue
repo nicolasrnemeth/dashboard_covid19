@@ -9,20 +9,11 @@
           <div class="row">
             <div class="col">
               <ChoroplethMap/>
-              <div class="scatter-plot">
-                <!--<ScatterPlot/>-->
-                {scatterplot}
-              </div>
+              <ScatterPlot/>
             </div>
             <div class="col">
-              <div class="multiple-line-chart">
-                <!--<MultipleLineChart/>-->
-                {multiplelinechart}
-              </div>
-              <div class="line-chart">
-                <!--<LineChart/>-->
-                {linechart}
-              </div>
+              <MultipleLineChart/>
+              <LineChart/>
             </div>
           </div>
         </div>
@@ -39,15 +30,16 @@
 
 <script>
 import ChoroplethMap from './components/ChoroplethMap.vue';
-/*import MultipleLineChart from './components/MultipleLineChart.vue';
+import MultipleLineChart from './components/MultipleLineChart.vue';
 import ScatterPlot from './components/Scatterplot.vue';
 import LineChart from './components/LineChart.vue';
-*/
+//import ControlBoard from './components/ControlBoard.vue';
+
 export default {
   name: 'App',
   components: {
-    ChoroplethMap
-    //MultipleLineChart, ScatterPlot, LineChart
+    ChoroplethMap, ScatterPlot, LineChart, MultipleLineChart
+    //ControlBoard
   },
   mounted() {
     this.$store.dispatch('loadData');
@@ -90,18 +82,6 @@ export default {
   margin-right: -15px;
   margin-left: -15px;
   background-color: rosybrown;
-}
-
-.multiple-line-chart {
-  background-color: rgb(134, 134, 255);
-}
-
-.scatter-plot {
-  background-color: rgb(139, 255, 139);
-}
-
-.line-chart {
-  background-color: rgb(255, 212, 133);
 }
 
 .control-board {
