@@ -4,7 +4,7 @@
       <div class="row">
         <div class="col-md-10">
           <div class="app-title">
-            {title}
+            Visualization Dashboard - Covid-19 Pandemic
           </div>
           <div class="row">
             <div class="col">
@@ -60,6 +60,7 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 0px;
+  border: 1px solid #000000;
 }
 
 .row {
@@ -75,10 +76,9 @@ export default {
 }
 
 .app-title {
-  margin-right: -15px;
-  margin-left: -15px;
   background-color: rosybrown;
   border: 1px solid #000000;
+  border-right: 0px solid #000000;
 }
 
 </style>

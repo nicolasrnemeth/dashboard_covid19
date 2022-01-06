@@ -1,6 +1,6 @@
 <template>
   <div class="view-E" ref="viewE">
-    {controlboard}
+    Control Board
     <!--<svg class="svg-E" :width="svgWidth" :height="svgHeight" ref="svgE">-->
       <!-- placeholder -->
     <!--</svg>-->
@@ -53,9 +53,10 @@ export default {
 
 .view-E {
   width: 16.666667vw;
-  height: calc(100vh - 8px);
+  height: calc(100vh - 7px);
   background-color: rgb(128, 128, 128);
   border: 1px solid #000000;
+  border-left: 1.5px solid #000000;
 }
 
 </style>
