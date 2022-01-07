@@ -26,6 +26,9 @@
 </template>
 
 <script>
+
+//import * as d3 from 'd3';
+
 import ChoroplethMap from './components/ChoroplethMap.vue';
 import MultipleLineChart from './components/MultipleLineChart.vue';
 import ScatterPlot from './components/Scatterplot.vue';
@@ -59,26 +62,34 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 0px;
   border: 1px solid #000000;
 }
 
+.container-fluid {
+  margin: 0px !important;
+  padding: 0px !important;
+}
+
 .row {
+  margin: 0px !important;
   padding: 0px !important;
 }
 
 .col {
+  margin: 0px !important;
   padding: 0px !important;
 }
 
 .col-md-2, .col-md-10 {
+  margin: 0px !important;
   padding: 0px !important;
 }
 
 .app-title {
   background-color: rosybrown;
   border: 1px solid #000000;
-  border-right: 0px solid #000000;
+  width: calc(83vw + 1.5px);
+  height: 3.9vh;
 }
 
 </style>

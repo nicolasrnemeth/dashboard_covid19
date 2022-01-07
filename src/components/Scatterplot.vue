@@ -38,7 +38,7 @@ export default {
     // Draw scatterplot including axes points and bivariate color scheme
     createChart() {
       if (this.$refs.viewC) {
-        this.svgWidth = document.body.clientWidth*0.41666667;
+        this.svgWidth = document.body.clientWidth*0.415;
         this.svgHeight = document.body.clientHeight*0.475;
       }
 
@@ -75,7 +75,7 @@ export default {
         .append('text')
         .text("x-axis-label")
         .attr('x', 0.5*translateX)
-        .attr('y', '3em')
+        .attr('y', '2.8em')
         .style('fill', 'black')
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
@@ -160,9 +160,8 @@ export default {
 <style>
 
 .view-C {
-  width: 41.666667vw;
-  height: 47.5vh;
-  margin-left: 15px;
+  width: 41.5vw;
+  height: 47.8vh;
   background-color: rgb(231, 249, 255);
   border: 1px solid #000000;
 }

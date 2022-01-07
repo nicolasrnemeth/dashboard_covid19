@@ -53,10 +53,9 @@ export default {
 
 .view-E {
   width: 16.666667vw;
-  height: calc(100vh - 7px);
+  height: 99.5vh;
   background-color: rgb(128, 128, 128);
   border: 1px solid #000000;
-  border-left: 1.5px solid #000000;
 }
 
 </style>

@@ -22,7 +22,7 @@ export default {
       svgWidth: 500,
       svgHeight: 500,
       svgPadding: {
-        top: 0, right: 0, bottom: 0, left: 0,
+        top: 0, right: 1, bottom: 0, left: 1,
       },
     }
   },
@@ -34,12 +34,12 @@ export default {
     // Draw World Map
     createMap() {
       if (this.$refs.viewA) {
-        this.svgWidth = document.body.clientWidth*0.41666667;
-        this.svgHeight = document.body.clientHeight*0.475;
+        this.svgWidth = document.body.clientWidth*0.415 - this.svgPadding.left - this.svgPadding.right;
+        this.svgHeight = document.body.clientHeight*0.475 - this.svgPadding.top - this.svgPadding.bottom;
       }
       let projection = d3.geoMercator()
                          .scale(this.svgWidth*0.16)
-                         .translate([this.svgWidth/2,this.svgHeight/1.6]);
+                         .translate([this.svgWidth/2,this.svgHeight/1.5]);
       let path_generator = d3.geoPath().projection(projection);
       let worldMap = d3.select(this.$refs.choroplethMap)
       
@@ -102,9 +102,8 @@ export default {
 <style>
 
 .view-A {
-  width: 41.666667vw;
-  height: 47.5vh;
-  margin-left: 15px;
+  width: 41.5vw;
+  height: 47.8vh;
   background-color: rgb(169, 168, 255);
   border: 1px solid #000000;
 }

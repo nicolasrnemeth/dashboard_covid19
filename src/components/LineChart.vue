@@ -25,7 +25,7 @@ export default {
       svgWidth: 500,
       svgHeight: 500,
       svgPadding: {
-        top: 10, right: 20, bottom: 30, left: 45,
+        top: 10, right: 5, bottom: 30, left: 45,
       },
       processed_data: [],
     }
@@ -38,8 +38,8 @@ export default {
   methods: {
     createChart() {
       if (this.$refs.viewD) {
-        this.svgWidth = document.body.clientWidth*0.41666667;
-        this.svgHeight = document.body.clientHeight*0.475;
+        this.svgWidth = document.body.clientWidth*0.415;
+        this.svgHeight = document.body.clientHeight*0.478;
       }
 
       d3.select(this.$refs.lineChart)
@@ -101,7 +101,7 @@ export default {
         .append('text')
         .text("x-axis-label")
         .attr('x', 0.5*translateX)
-        .attr('y', '3em')
+        .attr('y', '2.8em')
         .style('fill', 'black')
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
@@ -152,8 +152,8 @@ export default {
 <style>
 
 .view-D {
-  width: 41.666667vw;
-  height: 47.5vh;
+  width: 41.5vw;
+  height: 47.8vh;
   background-color: rgb(255, 209, 255);
   border: 1px solid #000000;
 }

@@ -40,8 +40,8 @@ export default {
   methods: {
     createChart() {
       if (this.$refs.viewB) {
-        this.svgWidth = document.body.clientWidth*0.41666667;
-        this.svgHeight = document.body.clientHeight*0.475;
+        this.svgWidth = document.body.clientWidth*0.415;
+        this.svgHeight = document.body.clientHeight*0.478;
       }
 
     },
@@ -59,8 +59,8 @@ export default {
 <style>
 
 .view-B {
-  width: 41.666667vw;
-  height: 47.5vh;
+  width: 41.5vw;
+  height: 47.8vh;
   background-color: rgb(211, 255, 215);
   border: 1px solid #000000;
 }
