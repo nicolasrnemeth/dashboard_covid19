@@ -22,8 +22,8 @@ export default {
   },
   data() {
     return {
-      svgWidth: 500,
-      svgHeight: 500,
+      svgWidth: 100,
+      svgHeight: 100,
       svgPadding: {
         top: 10, right: 5, bottom: 30, left: 45,
       },
@@ -38,8 +38,8 @@ export default {
   methods: {
     createChart() {
       if (this.$refs.viewD) {
-        this.svgWidth = document.body.clientWidth*0.415;
-        this.svgHeight = document.body.clientHeight*0.478;
+        this.svgWidth = document.body.clientWidth*0.415 //- this.svgPadding.left - this.svgPadding.right;
+        this.svgHeight = document.body.clientHeight*0.478 //- this.svgPadding.top - this.svgPadding.bottom;
       }
 
       d3.select(this.$refs.lineChart)
@@ -67,7 +67,7 @@ export default {
    
       // Plot lines
       const lineGroup = d3.select(this.$refs.lineGroup)
-
+ 
       lineGroup.selectAll("lines")
                .data(grouped_data)
                .enter()
@@ -115,7 +115,9 @@ export default {
     process_data(feature) {
       // Preprocess data
       let processed_data = [];
+      let count = 0;
       for (let country of Object.keys(this.$store.state.covidData)) {
+        if (count == 20) break;
         for (let day of this.$store.state.covidData[country].data) {
           if (feature in day && day[feature] != undefined) {
             processed_data.push({
@@ -125,6 +127,7 @@ export default {
             });
           }
         }
+        count++;
       }
       this.processed_data = processed_data;
     },

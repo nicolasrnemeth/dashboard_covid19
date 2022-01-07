@@ -22,10 +22,10 @@ export default {
   },
   data() {
     return {
-      svgWidth: 500,
-      svgHeight: 500,
+      svgWidth: 100,
+      svgHeight: 100,
       svgPadding: {
-        top: 10, right: 10, bottom: 30, left: 45,
+        top: 10, right: 5, bottom: 30, left: 45,
       },
     }
   },
@@ -38,8 +38,8 @@ export default {
     // Draw scatterplot including axes points and bivariate color scheme
     createChart() {
       if (this.$refs.viewC) {
-        this.svgWidth = document.body.clientWidth*0.415;
-        this.svgHeight = document.body.clientHeight*0.475;
+        this.svgWidth = document.body.clientWidth*0.415 //- this.svgPadding.left - this.svgPadding.right;
+        this.svgHeight = document.body.clientHeight*0.478 //- this.svgPadding.top - this.svgPadding.bottom;
       }
 
       d3.select(this.$refs.scatterPlot)

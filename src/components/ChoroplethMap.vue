@@ -19,8 +19,8 @@ export default {
   },
   data() {
     return {
-      svgWidth: 500,
-      svgHeight: 500,
+      svgWidth: 100,
+      svgHeight: 100,
       svgPadding: {
         top: 0, right: 1, bottom: 0, left: 1,
       },
@@ -35,7 +35,7 @@ export default {
     createMap() {
       if (this.$refs.viewA) {
         this.svgWidth = document.body.clientWidth*0.415 - this.svgPadding.left - this.svgPadding.right;
-        this.svgHeight = document.body.clientHeight*0.475 - this.svgPadding.top - this.svgPadding.bottom;
+        this.svgHeight = document.body.clientHeight*0.478 - this.svgPadding.top - this.svgPadding.bottom;
       }
       let projection = d3.geoMercator()
                          .scale(this.svgWidth*0.16)
@@ -52,7 +52,7 @@ export default {
             //.on("click", (_, d) => this.handleStateClick(d.properties.name))
             .style('fill', 'white')
             .style('stroke', 'black')
-            .style('stroke-width', 1.1)
+            .style('stroke-width', 0.7)
             //.style('cursor', 'pointer')
       
       //this.updateColor();
