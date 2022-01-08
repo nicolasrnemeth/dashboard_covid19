@@ -11,7 +11,6 @@
   </div>
 </template>
 
-
 <script>
 
 import * as d3 from 'd3';
@@ -88,8 +87,8 @@ export default {
                  .join('circle')
                  .attr('class', 'points')
                  //.attr('id', d => d..replaceAll(" ", "")+"_point")
-                 .attr('cx', d => this.xScale(d.gdp))
-                 .attr('cy', d => this.yScale(d.cardiovasc))
+                 .attr('cx', d => this.xScale(d.x))
+                 .attr('cy', d => this.yScale(d.y))
                  .attr('r', 2)
                  //.style('fill-opacity', 0)
                  .style('fill', 'red')
@@ -113,45 +112,32 @@ export default {
     },
   },
   computed: {
-    selectedCountries: {
-      get() {
-        return this.$store.getters.selectedCountries;
-      }
-    },
     data_: {
       get() {
-        let _data_ = [];
-        let count = 0;
-        for (let elem of Object.values(this.$store.state.covidData)) {
-          if (isNaN(elem.gdp_per_capita) || isNaN(elem.cardiovasc_death_rate)) continue;
-          if (count == 30) break;
-          _data_.push(
-            {
-              gdp: elem.gdp_per_capita,
-              cardiovasc: elem.cardiovasc_death_rate
-            }
-          );
-          count++;
-        }
-        return _data_;
+        return this.$store.getters.dataViewC;
       }
     },
     xScale() {
       //let roundFactor = (maxVal+1e-06).toString().indexOf('.')/100;
       return d3.scaleLinear()
-               .domain(this.dataExtent("gdp"))
+               .domain(this.dataExtent("x"))
                .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
     },
     yScale() {
       // Evaluate rounding factor depending on the magnitude of the input numbers
       //let roundFactor = (maxVal+1e-06).toString().indexOf('.')/100;
       return d3.scaleLinear()
-               .domain(this.dataExtent("cardiovasc"))
+               .domain(this.dataExtent("y"))
                .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
     },
   },
   watch: {
-
+    data_: {
+      handler() {
+        this.createChart();
+      },
+      deep: true,
+    }
   }
 }
 

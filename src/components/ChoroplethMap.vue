@@ -80,21 +80,11 @@ export default {
     },
   },
   computed: {
-    selectedCountries: {
-      get() {
-        return 0;
-      }
-    },
+    
   },
   watch: {
-    selectedCountries: {
-      handler() {
-        return;
-      },
-      deep: true,
-      immediate: true,
-    }
-  },
+    
+  }
 }
 
 </script>

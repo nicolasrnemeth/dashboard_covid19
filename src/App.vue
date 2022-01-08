@@ -1,6 +1,10 @@
 <template>
   <div id="app" ref="app_">
-    <div class="container-fluid" id="dashboard">
+    <div id="loader_" class="align-items-center">
+      <div id="loadingText"><strong>Preparing data, please wait a moment ...</strong></div>
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+    <div v-if="$store.state.dataIsReady" class="container-fluid" id="dashboard">
       <div class="row">
         <div class="col-md-10">
           <div class="app-title">
@@ -8,17 +12,17 @@
           </div>
           <div class="row">
             <div class="col">
-              <ChoroplethMap/>
-              <ScatterPlot/>
+              
+              
             </div>
             <div class="col">
-              <MultipleLineChart/>
-              <LineChart/>
+              <!--<MultipleLineChart/>-->
+              <!--<LineChart/>-->
             </div>
           </div>
         </div>
         <div class="col-md-2">
-          <ControlBoard/>
+          
         </div>
       </div>
     </div>
@@ -29,16 +33,16 @@
 
 //import * as d3 from 'd3';
 
-import ChoroplethMap from './components/ChoroplethMap.vue';
-import MultipleLineChart from './components/MultipleLineChart.vue';
-import ScatterPlot from './components/Scatterplot.vue';
-import LineChart from './components/LineChart.vue';
-import ControlBoard from './components/ControlBoard.vue';
+//import ChoroplethMap from './components/ChoroplethMap.vue';
+//import MultipleLineChart from './components/MultipleLineChart.vue';
+//import ScatterPlot from './components/Scatterplot.vue';
+//import LineChart from './components/LineChart.vue';
+//import ControlBoard from './components/ControlBoard.vue';
 
 export default {
   name: 'App',
   components: {
-    ChoroplethMap, ScatterPlot, LineChart, MultipleLineChart, ControlBoard
+    //ChoroplethMap, ScatterPlot/*, LineChart, MultipleLineChart*/, ControlBoard
   },
   mounted() {
     this.$store.dispatch('loadData');
@@ -47,6 +51,16 @@ export default {
 </script>
 
 <style>
+
+#loadingText {
+  margin-left: 1vw;
+  margin-top: 30vh;
+}
+
+.spinner-border {
+  margin: 2vh 50vw 0vh 50vw;
+  display: block !important;
+}
 
 #appTitle {
   text-align: start;
@@ -62,12 +76,12 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  border: 1px solid #000000;
 }
 
 .container-fluid {
   margin: 0px !important;
   padding: 0px !important;
+  border: 1px solid #000000;
 }
 
 .row {
