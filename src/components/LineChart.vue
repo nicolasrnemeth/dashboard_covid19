@@ -27,11 +27,9 @@ export default {
       svgPadding: {
         top: 10, right: 5, bottom: 30, left: 45,
       },
-      processed_data: [],
     }
   },
   mounted() {
-    this.process_data("people_fully_vaccinated_per_hundred");
     this.createChart();
     this.createAxesLabels();
   },
@@ -60,7 +58,7 @@ export default {
 
     createLines() {
       // Group entries by iso_code
-      let grouped_data = d3.group(this.processed_data, d => d.iso_code);
+      let grouped_data = d3.group(this.data_, d => d.iso_code);
 
       // Specify line
       let line = d3.line().x(d => this.xScale(d.date)).y(d => this.yScale(d.feature));
@@ -110,38 +108,33 @@ export default {
       return d3.timeParse("%Y-%m-%d")(dateString);
     },
     dataExtent(feature) {
-      return d3.extent(this.processed_data, d => d[feature]);
+      return d3.extent(this.data_, d => d[feature]);
     },
-    process_data(feature) {
-      // Preprocess data
-      let processed_data = [];
-      let count = 0;
-      for (let country of Object.keys(this.$store.state.covidData)) {
-        if (count == 20) break;
-        for (let day of this.$store.state.covidData[country].data) {
-          if (feature in day && day[feature] != undefined) {
-            processed_data.push({
-              iso_code: country,
-              date: this.toTime(day.date),
-              feature: day[feature],
-            });
-          }
-        }
-        count++;
-      }
-      this.processed_data = processed_data;
-    },
+    addSpacing(minVal, maxVal, down=0.02, up=1.02) {
+      return [minVal-down*maxVal, up*maxVal];
+    }
   },
-
   computed: {
+    data_: {
+      get() {
+        return this.$store.getters.dataViewD;
+      }
+    },
+    extentX: {
+      get() {
+        return this.$store.getters.selectionD.x;
+      }
+    },
     xScale() {
+      let [minVal, maxVal] = [this.toTime(this.extentX[0]), this.toTime(this.extentX[1])];
       return d3.scaleTime()
-               .domain(this.dataExtent("date"))
+               .domain(minVal, maxVal)
                .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
     },
     yScale() {
+      let [minVal, maxVal] = this.addSpacing(this.dataExtent("y"))
       return d3.scaleLinear()
-               .domain(this.dataExtent("feature"))
+               .domain(minVal, maxVal)
                .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
     }
   },

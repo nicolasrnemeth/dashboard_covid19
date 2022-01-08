@@ -117,7 +117,7 @@ export default {
 .view-A {
   width: 41.5vw;
   height: 47.8vh;
-  background-color: rgb(169, 168, 255);
+  background-color: rgb(245, 245, 245);
   border: 1px solid #000000;
 }
 

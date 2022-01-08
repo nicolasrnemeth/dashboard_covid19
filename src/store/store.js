@@ -24,11 +24,12 @@ const store = new Vuex.Store({
     },
     selectionC: {
       dateRange: ["", ""],
-      x: "",
-      y: "",
+      x: "gdp_per_capita",
+      y: "cardiovasc_death_rate",
       colorChannel: "",
       sizeChannel: "",
       countries: [],
+      continent: "Europe",
     },
     selectionD: {
       x: ["", ""],
@@ -58,21 +59,37 @@ const store = new Vuex.Store({
     //prepDataViewB(state, selection) {
 
     //},
-    prepDataViewC(state, feature) {
+    prepDataViewC(state, selection) {
+      let nullIDs = [];
       let _data_ = [];
-      for (let elem of Object.values(state.covidData)) {
-        if (!(feature.x in elem) || !(feature.y in elem)) continue;
+      for (let country of Object.keys(state.covidData)) {
+        // Filter by continent if continent is specified
+        if (selection.continent != "" && state.covidData[country].continent != selection.continent)
+          continue;
+        // Filter by countries if continent not specified
+        if (selection.continent == "" && !(country in selection.countries))
+          continue;
+        // Track and omit null values
+        if (state.covidData[country][selection.x] == undefined ||
+            state.covidData[country][selection.y] == undefined) {
+          nullIDs.push(country);
+          continue;
+        }
         _data_.push({
-            x: elem[feature.x],
-            y: elem[feature.y],
+          iso_code: country,
+          x: state.covidData[country][selection.x],
+          y: state.covidData[country][selection.y],
+          colChannel: "",
+          sizeChannel: "",
         });
       }
+      // Set the state of view C
       state.view_C = _data_;
     },
-    /*prepDataViewD(state, selection) {
-
+    prepDataViewD(state, selection) {
+      
     },
-    prepDataViewE(state, selection) {
+    /*prepDataViewE(state, selection) {
 
     },*/
   },
@@ -86,10 +103,12 @@ const store = new Vuex.Store({
   actions: {
     loadNPrepData(context) {
       //https://covid.ourworldindata.org/data/owid-covid-data.json
-      d3.json('./owid-covid-data_small.json').then((data) => {
+      d3.json('./owid-covid-data.json').then((data) => {
         // Parse entire dataset
-        context.state.covidData = data;
+        context.state.covidData = data; 
         // Prepare data for intial state of each view
+        context.commit("prepDataViewC", context.state.selectionC);
+        context.commit("prepDataViewD", context.state.selectionD);
         //context.commit("prepDataViewA", context.state.selectionA)
         // Allow dom elements to be rendered only when data for each view is prepped
         context.state.dataIsReady = true;

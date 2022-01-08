@@ -91,20 +91,16 @@ export default {
                  .attr('cy', d => this.yScale(d.y))
                  .attr('r', 2)
                  //.style('fill-opacity', 0)
-                 .style('fill', 'red')
-                 //.style('stroke', 'black')
-                 //.style('stroke-width', 1.2);
+                 .style('fill', '#00ff15')
+                 .style('stroke', 'black')
+                 .style('stroke-width', 0.7);
     },
-    // Round the values of the axes at both ends to multiples of x
-    roundUpToMultipleOfX(value, x, factor=1) {
-      return Math.ceil( (factor * value) / x) * x;
+    // Add space between marks and plot borders
+    addSpacing(minVal, maxVal, down=0.02, up=1.02) {
+      return [minVal-down*maxVal, up*maxVal];
     },
-    // see above --> done to have more consistent axes
-    roundDownToMultipleOfX(value, x, factor=1) {
-      return Math.floor( (factor * value) / x) * x;
-    },
-    // update colors of the countries on the map
-    colorCountries() {
+    // Apply color channel
+    colorPoints() {
 
     },
     dataExtent(feature) {
@@ -118,25 +114,21 @@ export default {
       }
     },
     xScale() {
-      //let roundFactor = (maxVal+1e-06).toString().indexOf('.')/100;
+      let [minVal, maxVal] = this.addSpacing(...this.dataExtent("x"));
       return d3.scaleLinear()
-               .domain(this.dataExtent("x"))
+               .domain([minVal, maxVal])
                .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
     },
     yScale() {
-      // Evaluate rounding factor depending on the magnitude of the input numbers
-      //let roundFactor = (maxVal+1e-06).toString().indexOf('.')/100;
+      let [minVal, maxVal] = this.addSpacing(...this.dataExtent("y"));
       return d3.scaleLinear()
-               .domain(this.dataExtent("y"))
+               .domain([minVal, maxVal])
                .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
     },
   },
   watch: {
     data_: {
-      handler() {
-        this.createChart();
-      },
-      deep: true,
+      
     }
   }
 }
@@ -148,7 +140,7 @@ export default {
 .view-C {
   width: 41.5vw;
   height: 47.8vh;
-  background-color: rgb(231, 249, 255);
+  /*background-color: rgb(231, 249, 255);*/
   border: 1px solid #000000;
 }
 
