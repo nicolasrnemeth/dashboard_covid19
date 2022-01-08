@@ -19,6 +19,9 @@ export default {
   },
   data() {
     return {
+      colorSteps: [
+        "#fef0d9", "#fdcc8a", "#fc8d59", "#e34a33", "#b30000"
+      ],
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
@@ -29,6 +32,7 @@ export default {
   mounted() {
     this.createMap();
     this.createEmptyArea();
+    this.colorCountries("human_development_index");
   },
   methods: {
     // Draw World Map
@@ -48,18 +52,37 @@ export default {
             .join('path')
             .attr('class', 'paths')
             .attr('d', path_generator)
-            .attr('id', d => d.properties.iso_a3.replaceAll(" ", "")+"_path")
+            .attr('id', d => d.properties.iso_a3.replaceAll(" ", "")+"_pathA")
             //.on("click", (_, d) => this.handleStateClick(d.properties.name))
             .style('fill', 'white')
             .style('stroke', 'black')
             .style('stroke-width', 0.7)
             //.style('cursor', 'pointer')
-      
-      //this.updateColor();
+    },
+    getColorIndex(value, minVal, maxVal) {
+      let idx = Math.trunc((value - minVal) / ((maxVal - minVal)*0.2));
+      if (idx == 5)
+        return 4;
+      return idx;
     },
     // Add color scheme to states based on selected bivariate color scheme
-    updateColor() {
-      return;
+    colorCountries(selection) {
+      let filtered_data = [];
+      for (let country of Object.keys(this.$store.state.covidData))
+        if (country.length == 3) 
+          filtered_data.push(this.$store.state.covidData[country][selection]);
+
+      let [minVal, maxVal] = d3.extent(filtered_data);
+
+      for (let country of Object.keys(this.$store.state.covidData)) {
+        if (country.length != 3) continue;
+        if (!(selection in this.$store.state.covidData[country]) || this.$store.state.covidData[country] == undefined) {
+          d3.select("#"+country+"_pathA").style('fill', "#cccccc");
+          continue;
+        }
+        let colIdx = this.getColorIndex(this.$store.state.covidData[country][selection], minVal, maxVal);
+        d3.select("#"+country+"_pathA").style('fill', this.colorSteps[colIdx]);
+      }
     },
     // increase the intensity of the color
     increaseColorSaturation(color, k=1.25) {

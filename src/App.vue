@@ -12,8 +12,8 @@
           </div>
           <div class="row">
             <div class="col">
-              
-              
+              <ChoroplethMap/>
+              <!--<Scatterplot/>-->
             </div>
             <div class="col">
               <!--<MultipleLineChart/>-->
@@ -22,7 +22,7 @@
           </div>
         </div>
         <div class="col-md-2">
-          
+          <ControlBoard/>
         </div>
       </div>
     </div>
@@ -33,19 +33,19 @@
 
 //import * as d3 from 'd3';
 
-//import ChoroplethMap from './components/ChoroplethMap.vue';
+import ChoroplethMap from './components/ChoroplethMap.vue';
 //import MultipleLineChart from './components/MultipleLineChart.vue';
 //import ScatterPlot from './components/Scatterplot.vue';
 //import LineChart from './components/LineChart.vue';
-//import ControlBoard from './components/ControlBoard.vue';
+import ControlBoard from './components/ControlBoard.vue';
 
 export default {
   name: 'App',
   components: {
-    //ChoroplethMap, ScatterPlot/*, LineChart, MultipleLineChart*/, ControlBoard
+    ChoroplethMap, ControlBoard//, ScatterPlot, LineChart, MultipleLineChart
   },
   mounted() {
-    this.$store.dispatch('loadData');
+    this.$store.dispatch('loadNPrepData');
   },
 }
 </script>
