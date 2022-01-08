@@ -29,7 +29,7 @@ export default {
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
-        top: 10, right: 5, bottom: 30, left: 45,
+        top: 10, right: 15, bottom: 30, left: 45,
       },
       processed_data: [],
     }
@@ -55,7 +55,7 @@ export default {
     createXAxis() {
       let XAxis = d3.select(this.$refs.xAxis)
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale)/*.tickFormat(d => d)*/);
+           .call(d3.axisBottom(this.xScale).tickFormat(d3.timeFormat("%m-%d-%y")));
     },
     createYAxis() {
       let YAxis = d3.select(this.$refs.yAxis);
@@ -91,7 +91,7 @@ export default {
       // Add the area
       Line.append("path")
           .datum(this.processed_data)
-          .attr("class", "area")
+          .attr("id", "area_")
           .attr("d", area);
     },
     createAxesLabels() {
@@ -162,12 +162,12 @@ export default {
 .view-B {
   width: 41.5vw;
   height: 47.8vh;
-  background-color: rgb(211, 255, 215);
+  /*background-color: rgb(211, 255, 215)*/;
   border: 1px solid #000000;
 }
 
-.area {
-  fill: purple;
+#area_ {
+  fill: #8b8000;
 }
 
 </style>

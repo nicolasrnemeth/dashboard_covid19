@@ -23,7 +23,7 @@ const store = new Vuex.Store({
       countries: [],
     },
     selectionC: {
-      dateRange: ["", ""],
+      dateRange: [],
       x: "gdp_per_capita",
       y: "cardiovasc_death_rate",
       colorChannel: "",
@@ -32,9 +32,10 @@ const store = new Vuex.Store({
       continent: "Europe",
     },
     selectionD: {
-      x: ["", ""],
-      y: "",
+      x: [],
+      y: "people_fully_vaccinated_per_hundred",
       countries: [],
+      continent: "Europe",
     },
     selectionE: {
 
@@ -62,7 +63,8 @@ const store = new Vuex.Store({
     prepDataViewC(state, selection) {
       let nullIDs = [];
       let _data_ = [];
-      for (let country of Object.keys(state.covidData)) {
+      
+      for (let country in state.covidData) {
         // Filter by continent if continent is specified
         if (selection.continent != "" && state.covidData[country].continent != selection.continent)
           continue;
@@ -87,7 +89,45 @@ const store = new Vuex.Store({
       state.view_C = _data_;
     },
     prepDataViewD(state, selection) {
-      
+      //let nullIDs = [];
+      let count = 0;
+      if (selection.x.length == 2) {
+        var left_date = d3.timeParse("%Y-%m-%d")(selection.x[0]);
+        var right_date = d3.timeParse("%Y-%m-%d")(selection.x[1]);
+      }
+      let _data_ = [];
+      for (let country in state.covidData) {
+        if (count == 10) break;
+        // Filter by continent if continent is specified
+        if (selection.continent != "" && state.covidData[country].continent != selection.continent)
+          continue;
+        // Filter by countries if continent not specified
+        if (selection.continent == "" && !(country in selection.countries))
+          continue;
+  
+        for (let day of state.covidData[country].data) {
+          // Track and omit null values
+          if (day[selection.y] == undefined) {
+            //nullIDs.push(country);
+            continue
+          }
+          let date = d3.timeParse("%Y-%m-%d")(day.date);
+          // Continue or break respectively when out of the input date range
+          if (! date) continue;
+          if (selection.x.length == 2) {
+            if (date < left_date) continue;
+            if (date > right_date) break;
+          }
+          _data_.push({
+            iso_code: country,
+            x: date,
+            y: day[selection.y],
+          });
+        }
+        count++;
+      }
+      // Set the state of view D
+      state.view_D = _data_;
     },
     /*prepDataViewE(state, selection) {
 
@@ -109,11 +149,11 @@ const store = new Vuex.Store({
         // Prepare data for intial state of each view
         context.commit("prepDataViewC", context.state.selectionC);
         context.commit("prepDataViewD", context.state.selectionD);
-        //context.commit("prepDataViewA", context.state.selectionA)
-        // Allow dom elements to be rendered only when data for each view is prepped
+
+        // Allow DOM elements to be rendered only after data for each view is prepped
         context.state.dataIsReady = true;
         // Remove loading sign
-        d3.select("#loader_").remove();
+        document.getElementById("loader_").remove();
       })
     },
   }

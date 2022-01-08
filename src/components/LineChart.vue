@@ -25,7 +25,7 @@ export default {
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
-        top: 10, right: 5, bottom: 30, left: 45,
+        top: 10, right: 15, bottom: 30, left: 45,
       },
     }
   },
@@ -47,9 +47,10 @@ export default {
       this.createLines();
     },
     createXAxis() {
-      let XAxis = d3.select(this.$refs.xAxis)
+      let XAxis = d3.select(this.$refs.xAxis);
+      //let tickValues = "";
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale)/*.tickFormat(d => d)*/);
+           .call(d3.axisBottom(this.xScale).tickFormat(d3.timeFormat("%m-%d-%y"))/*.tickValues(tickValues)*/);
     },
     createYAxis() {
       let YAxis = d3.select(this.$refs.yAxis);
@@ -61,7 +62,7 @@ export default {
       let grouped_data = d3.group(this.data_, d => d.iso_code);
 
       // Specify line
-      let line = d3.line().x(d => this.xScale(d.date)).y(d => this.yScale(d.feature));
+      let line = d3.line().x(d => this.xScale(d.x)).y(d => this.yScale(d.y));
    
       // Plot lines
       const lineGroup = d3.select(this.$refs.lineGroup)
@@ -73,8 +74,8 @@ export default {
                //.attr("class", "lines")
                .attr("d", (d) => line(d[1]))
                .style("fill", "none")
-               .style("stroke", "black")
-               .style("stroke-width", 1.2)
+               .style("stroke", "blue")
+               .style("stroke-width", 1.5)
                //.attr("transform", "translate(0,10)")
                //.on("click", lineClick)
                //.on("mouseover", lineOver)
@@ -120,21 +121,16 @@ export default {
         return this.$store.getters.dataViewD;
       }
     },
-    extentX: {
-      get() {
-        return this.$store.getters.selectionD.x;
-      }
-    },
     xScale() {
-      let [minVal, maxVal] = [this.toTime(this.extentX[0]), this.toTime(this.extentX[1])];
+      let [minVal, maxVal] = this.dataExtent("x");
       return d3.scaleTime()
-               .domain(minVal, maxVal)
+               .domain([minVal, maxVal])
                .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
     },
     yScale() {
-      let [minVal, maxVal] = this.addSpacing(this.dataExtent("y"))
+      let [minVal, maxVal] = this.addSpacing(...this.dataExtent("y"))
       return d3.scaleLinear()
-               .domain(minVal, maxVal)
+               .domain([minVal, maxVal])
                .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
     }
   },
@@ -150,7 +146,7 @@ export default {
 .view-D {
   width: 41.5vw;
   height: 47.8vh;
-  background-color: rgb(255, 209, 255);
+  /*background-color: rgb(255, 209, 255)*/;
   border: 1px solid #000000;
 }
 

@@ -16,8 +16,8 @@
               <ScatterPlot/>
             </div>
             <div class="col">
-              <!--<MultipleLineChart/>-->
-              <!--<LineChart/>-->
+              <MultipleLineChart/>
+              <LineChart/>
             </div>
           </div>
         </div>
@@ -34,15 +34,15 @@
 //import * as d3 from 'd3';
 
 import ChoroplethMap from './components/ChoroplethMap.vue';
-//import MultipleLineChart from './components/MultipleLineChart.vue';
+import MultipleLineChart from './components/MultipleLineChart.vue';
 import ScatterPlot from './components/Scatterplot.vue';
-//import LineChart from './components/LineChart.vue';
+import LineChart from './components/LineChart.vue';
 import ControlBoard from './components/ControlBoard.vue';
 
 export default {
   name: 'App',
   components: {
-    ChoroplethMap, ScatterPlot, ControlBoard//, LineChart, MultipleLineChart
+    ChoroplethMap, MultipleLineChart, ScatterPlot, LineChart, ControlBoard
   },
   mounted() {
     this.$store.dispatch('loadNPrepData');
@@ -104,6 +104,8 @@ export default {
   border: 1px solid #000000;
   width: calc(83vw + 1.5px);
   height: 3.9vh;
+  vertical-align: middle; 
+  line-height: 3.9vh;
 }
 
 </style>
