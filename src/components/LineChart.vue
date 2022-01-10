@@ -1,6 +1,6 @@
 <template>
   <div class="view-D" ref="viewD">
-    <svg class="svg-D" :width="svgWidth" :height="svgHeight" ref="svgD">
+    <svg id="svg-D" ref="svgD" v-show="viewBoxIsSet">
       <g class="line-chart" ref="lineChart">
         <g class="axis axis-x" ref="xAxis"></g>
         <g class="axis axis-y" ref="yAxis"></g>
@@ -22,6 +22,7 @@ export default {
   },
   data() {
     return {
+      viewBoxIsSet: false,
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
@@ -36,8 +37,11 @@ export default {
   methods: {
     createChart() {
       if (this.$refs.viewD) {
-        this.svgWidth = document.body.clientWidth*0.415 //- this.svgPadding.left - this.svgPadding.right;
-        this.svgHeight = document.body.clientHeight*0.478 //- this.svgPadding.top - this.svgPadding.bottom;
+        this.svgWidth = this.$refs.viewD.clientWidth;
+        this.svgHeight = this.$refs.viewD.clientHeight;
+        // Set viewBox of svg and only then display it
+        document.getElementById("svg-D").setAttribute("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`);
+        this.viewBoxIsSet = true;
       }
 
       d3.select(this.$refs.lineChart)

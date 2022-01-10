@@ -26,8 +26,8 @@ export default {
   },
   mounted() {
     if (this.$refs.svgE) {
-      this.svgWidth = document.body.clientWidth*0.16666667;
-      this.svgHeight = document.body.clientHeight;
+      this.svgWidth = this.$refs.viewE.clientWidth;
+        this.svgHeight = this.$refs.viewE.clientHeight;
     }
   },
   methods: {

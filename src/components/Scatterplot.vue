@@ -1,6 +1,6 @@
 <template>
   <div class="view-C" ref="viewC">
-    <svg class="svg-C" :width="svgWidth" :height="svgHeight" ref="svgC">
+    <svg id="svg-C" ref="svgC" v-show="viewBoxIsSet">
       <g class="scatter-plot" ref="scatterPlot">
         <g class="axis axis-x" ref="xAxis"></g>
         <g class="axis axis-y" ref="yAxis"></g>
@@ -21,6 +21,7 @@ export default {
   },
   data() {
     return {
+      viewBoxIsSet: false,
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
@@ -37,8 +38,11 @@ export default {
     // Draw scatterplot including axes points and bivariate color scheme
     createChart() {
       if (this.$refs.viewC) {
-        this.svgWidth = document.body.clientWidth*0.415 //- this.svgPadding.left - this.svgPadding.right;
-        this.svgHeight = document.body.clientHeight*0.478 //- this.svgPadding.top - this.svgPadding.bottom;
+        this.svgWidth = this.$refs.viewC.clientWidth;
+        this.svgHeight = this.$refs.viewC.clientHeight;
+        // Set viewBox of svg and only then display it
+        document.getElementById("svg-C").setAttribute("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`);
+        this.viewBoxIsSet = true;
       }
 
       d3.select(this.$refs.scatterPlot)

@@ -51,6 +51,9 @@ export default {
 </script>
 
 <style>
+body {
+  overflow: hidden !important;
+}
 
 #loadingText {
   margin-left: 1vw;

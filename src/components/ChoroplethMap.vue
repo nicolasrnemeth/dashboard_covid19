@@ -1,9 +1,9 @@
 <template>
   <div class="view-A" ref="viewA">
-    <svg class="svg-A" :width="svgWidth" :height="svgHeight" ref="svgA">
+    <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet">
         <!--<rect id="empty-area" ref="emptyArea"></rect>-->
         <g id="choropleth-map" ref="choroplethMap"></g>
-        <rect id="toolTip-A"></rect>
+        <!--<rect id="toolTip-A"></rect>-->
     </svg>
   </div>
 </template>
@@ -22,10 +22,11 @@ export default {
       colorSteps: [
         "#fef0d9", "#fdcc8a", "#fc8d59", "#e34a33", "#b30000"
       ],
+      viewBoxIsSet: false,
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
-        top: 0, right: 1, bottom: 0, left: 1,
+        top: 0, right: 0, bottom: 0, left: 0,
       },
     }
   },
@@ -38,12 +39,15 @@ export default {
     // Draw World Map
     createMap() {
       if (this.$refs.viewA) {
-        this.svgWidth = document.body.clientWidth*0.415 - this.svgPadding.left - this.svgPadding.right;
-        this.svgHeight = document.body.clientHeight*0.478 - this.svgPadding.top - this.svgPadding.bottom;
+        this.svgWidth = this.$refs.viewA.clientWidth-this.svgPadding.left-this.svgPadding.right;
+        this.svgHeight = this.$refs.viewA.clientHeight-this.svgPadding.top-this.svgPadding.bottom;
+        // Set viewBox of svg and only then display it
+        document.getElementById("svg-A").setAttribute("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`);
+        this.viewBoxIsSet = true;
       }
       let projection = d3.geoMercator()
-                         .scale(this.svgWidth*0.16)
-                         .translate([this.svgWidth/2,this.svgHeight/1.5]);
+                         .fitSize([this.svgWidth, this.svgHeight], mapWorld);
+                         //.scale(this.svgWidth*0.2);
       let path_generator = d3.geoPath().projection(projection);
       let worldMap = d3.select(this.$refs.choroplethMap)
       

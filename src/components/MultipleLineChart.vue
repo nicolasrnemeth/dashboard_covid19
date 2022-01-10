@@ -1,17 +1,20 @@
 <template>
   <div class="view-B" ref="viewB">
-    <svg class="svg-B" :width="svgWidth" :height="svgHeight" ref="svgB">
-      <g class="multiple-line-chart" ref="multipleLineChart">
-        <g class="axis axis-x" ref="xAxis"></g>
-        <g class="axis axis-y" ref="yAxis"></g>
-        <g class="line" ref="Line"></g>
-        <g class="point-group" ref="pointGroup"></g>
-        <rect id="toolTip-B"></rect>
-      </g>
-      <!--<g></g>
-      <g></g>
-      <g></g>-->
-    </svg>
+    <div class="singleDiv" ref="first">
+      <svg id="svg-1" class="singleSvg" ref="svg1" v-show="viewBoxIsSet" preserveAspectRatio="none">
+        <g class="multiple-line-chart" ref="multipleLineChart">
+          <g class="axis axis-x" ref="xAxis"></g>
+          <g class="axis axis-y" ref="yAxis"></g>
+          <g class="line" ref="Line"></g>
+          <g class="point-group" ref="pointGroup"></g>
+          <!--<rect id="toolTip-B"></rect>-->
+        </g>
+      </svg>
+    </div>
+    <div class="singleDiv">Hello</div>
+    <div class="singleDiv" v-show="ready">Hello</div>
+    <div class="singleDiv">Hello</div>
+    <div class="singleDiv">Hello</div>
   </div>
 </template>
 
@@ -26,10 +29,12 @@ export default {
   },
   data() {
     return {
+      ready: false,
+      viewBoxIsSet: false,
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
-        top: 10, right: 15, bottom: 30, left: 45,
+        top: 10, right: 15, bottom: 5, left: 45,
       },
       processed_data: [],
     }
@@ -38,12 +43,18 @@ export default {
     this.process_data("new_cases_smoothed");
     this.createChart();
     this.createAxesLabels();
+    setTimeout(() => {
+      this.ready=false;
+    }, 3000)
   },
   methods: {
     createChart() {
       if (this.$refs.viewB) {
-        this.svgWidth = document.body.clientWidth*0.415 //- this.svgPadding.left - this.svgPadding.right;
-        this.svgHeight = document.body.clientHeight*0.478 //- this.svgPadding.top - this.svgPadding.bottom;
+        this.svgWidth = this.$refs.first.clientWidth; 
+        this.svgHeight = this.$refs.first.clientHeight;
+        // Set viewBox of svg and only then display it
+        document.getElementById("svg-B").setAttribute("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`);
+        this.viewBoxIsSet = true;
       }
 
       d3.select(this.$refs.multipleLineChart)
@@ -55,11 +66,13 @@ export default {
     createXAxis() {
       let XAxis = d3.select(this.$refs.xAxis)
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale).tickFormat(d3.timeFormat("%m-%d-%y")));
+           .call(d3.axisBottom(this.xScale).tickFormat(d3.timeFormat("%m-%d-%y")).tickValues([]));
     },
     createYAxis() {
+      let [min_, max_, middle_] = [...this.yScale.domain(), this.yScale.domain()[1]/2];
       let YAxis = d3.select(this.$refs.yAxis);
-      YAxis.call(d3.axisLeft(this.yScale)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
+      YAxis.call(d3.axisLeft(this.yScale).tickValues([min_, middle_, max_]));
+      /*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/
     },
 
     createLines() {
@@ -95,7 +108,7 @@ export default {
           .attr("d", area);
     },
     createAxesLabels() {
-      let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
+      //let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
       let translateY = this.svgHeight - this.svgPadding.top - this.svgPadding.bottom;
 
       d3.select(this.$refs.yAxis)
@@ -108,14 +121,14 @@ export default {
         .style('fill', 'black')
         .style('font-weight', 'bold');
     
-      d3.select(this.$refs.xAxis)
+      /*d3.select(this.$refs.xAxis)
         .append('text')
         .text("x-axis-label")
         .attr('x', 0.5*translateX)
         .attr('y', '2.8em')
         .style('fill', 'black')
         .style('text-anchor', 'middle')
-        .style('font-weight', 'bold')
+        .style('font-weight', 'bold')*/
     },
     toTime(dateString) {
       return d3.timeParse("%Y-%m-%d")(dateString);
@@ -160,10 +173,25 @@ export default {
 <style>
 
 .view-B {
+  display: flex;
+  flex-direction: column;
   width: 41.5vw;
   height: 47.8vh;
-  /*background-color: rgb(211, 255, 215)*/;
+  background-color: rgb(211, 255, 215);
   border: 1px solid #000000;
+}
+
+.singleSvg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.singleDiv {
+  position: relative;
+  height: 100%;
 }
 
 #area_ {
