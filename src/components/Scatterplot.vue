@@ -1,6 +1,6 @@
 <template>
   <div class="view-C" ref="viewC">
-    <svg id="svg-C" ref="svgC" v-show="viewBoxIsSet">
+    <svg id="svg-C" ref="svgC" v-show="viewBoxIsSet" preserveAspectRatio="none">
       <g class="scatter-plot" ref="scatterPlot">
         <g class="axis axis-x" ref="xAxis"></g>
         <g class="axis axis-y" ref="yAxis"></g>
@@ -142,10 +142,19 @@ export default {
 <style>
 
 .view-C {
+  position: relative;
   width: 41.5vw;
   height: 47.8vh;
   /*background-color: rgb(231, 249, 255);*/
   border: 1px solid #000000;
+}
+
+#svg-C {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
 }
 
 </style>

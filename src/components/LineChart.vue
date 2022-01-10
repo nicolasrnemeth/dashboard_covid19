@@ -1,6 +1,6 @@
 <template>
   <div class="view-D" ref="viewD">
-    <svg id="svg-D" ref="svgD" v-show="viewBoxIsSet">
+    <svg id="svg-D" ref="svgD" v-show="viewBoxIsSet" preserveAspectRatio="none">
       <g class="line-chart" ref="lineChart">
         <g class="axis axis-x" ref="xAxis"></g>
         <g class="axis axis-y" ref="yAxis"></g>
@@ -148,10 +148,19 @@ export default {
 <style>
 
 .view-D {
+  position: relative;
   width: 41.5vw;
   height: 47.8vh;
   /*background-color: rgb(255, 209, 255)*/;
   border: 1px solid #000000;
+}
+
+#svg-D {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
 }
 
 </style>

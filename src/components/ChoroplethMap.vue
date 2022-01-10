@@ -1,7 +1,7 @@
 <template>
   <div class="view-A" ref="viewA">
-    <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet">
-        <!--<rect id="empty-area" ref="emptyArea"></rect>-->
+    <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet" preserveAspectRatio="none">
+        <rect id="empty-area" ref="emptyArea"></rect>
         <g id="choropleth-map" ref="choroplethMap"></g>
         <!--<rect id="toolTip-A"></rect>-->
     </svg>
@@ -32,7 +32,7 @@ export default {
   },
   mounted() {
     this.createMap();
-    //this.createEmptyArea();
+    this.createEmptyArea();
     this.colorCountries("human_development_index");
   },
   methods: {
@@ -132,7 +132,6 @@ export default {
   position: relative;
   width: 41.5vw;
   height: 47.8vh;
-  background-color: rgb(245, 245, 245);
   border: 1px solid #000000;
 }
 
@@ -145,7 +144,7 @@ export default {
 }
 
 #empty-area {
-  fill: white;
+  fill: rgba(0, 105, 148, 0.01);
 }
 
 </style>

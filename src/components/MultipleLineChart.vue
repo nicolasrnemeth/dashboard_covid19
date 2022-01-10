@@ -1,20 +1,11 @@
 <template>
   <div class="view-B" ref="viewB">
-    <div class="singleDiv" ref="first">
-      <svg id="svg-B" class="singleSvg" ref="svgB" v-show="viewBoxIsSet" preserveAspectRatio="none">
-  <g class="multiple-line-chart" ref="multipleLineChart">
-    <g class="axis axis-x" ref="xAxis"></g>
-    <g class="axis axis-y" ref="yAxis"></g>
-    <g class="line" ref="Line"></g>
-    <g class="point-group" ref="pointGroup"></g>
-  </g>
-</svg>
-    </div>
-    <div class="singleDiv" ref="div2">Hello</div>
-    <div class="singleDiv" ref="div3">Hello</div>
-    <div class="singleDiv" ref="div4">Hello</div>
-    <div class="singleDiv" ref="div5">Hello</div>
-    <div class="singleDiv" ref="div6">Hello</div>
+    <div class="singleDiv" ref="div1" v-show="showToggle.d1">Hello</div>
+    <div class="singleDiv" ref="div2" v-show="showToggle.d2">Hello</div>
+    <div class="singleDiv" ref="div3" v-show="showToggle.d3">Hello</div>
+    <div class="singleDiv" ref="div4" v-show="showToggle.d4">Hello</div>
+    <div class="singleDiv" ref="div5" v-show="showToggle.d5">Hello</div>
+    <div class="singleDiv" ref="div6" v-show="showToggle.d6">Hello</div>
     <!--<rect id="toolTip-B"></rect>-->
   </div>
 </template>
