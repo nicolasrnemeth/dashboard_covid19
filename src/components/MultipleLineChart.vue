@@ -1,24 +1,33 @@
 <template>
   <div class="view-B" ref="viewB">
     <div class="singleDiv" ref="first">
-      <svg id="svg-1" class="singleSvg" ref="svg1" v-show="viewBoxIsSet" preserveAspectRatio="none">
-        <g class="multiple-line-chart" ref="multipleLineChart">
-          <g class="axis axis-x" ref="xAxis"></g>
-          <g class="axis axis-y" ref="yAxis"></g>
-          <g class="line" ref="Line"></g>
-          <g class="point-group" ref="pointGroup"></g>
-          <!--<rect id="toolTip-B"></rect>-->
-        </g>
-      </svg>
+      <svg id="svg-B" class="singleSvg" ref="svgB" v-show="viewBoxIsSet" preserveAspectRatio="none">
+  <g class="multiple-line-chart" ref="multipleLineChart">
+    <g class="axis axis-x" ref="xAxis"></g>
+    <g class="axis axis-y" ref="yAxis"></g>
+    <g class="line" ref="Line"></g>
+    <g class="point-group" ref="pointGroup"></g>
+  </g>
+</svg>
     </div>
-    <div class="singleDiv">Hello</div>
-    <div class="singleDiv" v-show="ready">Hello</div>
-    <div class="singleDiv">Hello</div>
-    <div class="singleDiv">Hello</div>
+    <div class="singleDiv" ref="div2">Hello</div>
+    <div class="singleDiv" ref="div3">Hello</div>
+    <div class="singleDiv" ref="div4">Hello</div>
+    <div class="singleDiv" ref="div5">Hello</div>
+    <div class="singleDiv" ref="div6">Hello</div>
+    <!--<rect id="toolTip-B"></rect>-->
   </div>
 </template>
-
-
+<!--
+<svg id="svg-B" class="singleSvg" ref="svgB" v-show="viewBoxIsSet" preserveAspectRatio="none">
+  <g class="multiple-line-chart" ref="multipleLineChart">
+    <g class="axis axis-x" ref="xAxis"></g>
+    <g class="axis axis-y" ref="yAxis"></g>
+    <g class="line" ref="Line"></g>
+    <g class="point-group" ref="pointGroup"></g>
+  </g>
+</svg>
+-->
 <script>
 
 import * as d3 from 'd3';
@@ -29,8 +38,15 @@ export default {
   },
   data() {
     return {
-      ready: false,
-      viewBoxIsSet: false,
+      showToggle: {
+        d1: true, 
+        d2: true,
+        d3: true,
+        d4: true,
+        d5: true,
+        d6: true, 
+      },
+      viewBoxIsSet:false,
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {

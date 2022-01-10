@@ -32,7 +32,7 @@ export default {
   },
   mounted() {
     this.createMap();
-    this.createEmptyArea();
+    //this.createEmptyArea();
     this.colorCountries("human_development_index");
   },
   methods: {
@@ -47,21 +47,31 @@ export default {
       }
       let projection = d3.geoMercator()
                          .fitSize([this.svgWidth, this.svgHeight], mapWorld);
-                         //.scale(this.svgWidth*0.2);
+                         //.translate([this.svgWidth/2, this.svgHeight/1.5])
+                         //.scale((this.svgWidth-1)/2/Math.PI);
       let path_generator = d3.geoPath().projection(projection);
       let worldMap = d3.select(this.$refs.choroplethMap)
       
       worldMap.selectAll('path')
-            .data(mapWorld.features)
-            .join('path')
-            .attr('class', 'paths')
-            .attr('d', path_generator)
-            .attr('id', d => d.properties.iso_a3.replaceAll(" ", "")+"_pathA")
-            //.on("click", (_, d) => this.handleStateClick(d.properties.name))
-            .style('fill', 'white')
-            .style('stroke', 'black')
-            .style('stroke-width', 0.7)
-            //.style('cursor', 'pointer')
+              .data(mapWorld.features)
+              .join('path')
+              .attr('d', path_generator)
+              .attr('id', d => d.properties.iso_a3.replaceAll(" ", "")+"_pathA")
+              //.on("click", (_, d) => this.handleStateClick(d.properties.name))
+              .style('fill', 'white')
+              .style('stroke', 'black')
+              .style('stroke-width', 0.2)
+              //.style('cursor', 'pointer')
+      
+      // Enable zooming for the map
+      let zoom = d3.zoom()
+                   .scaleExtent([1, 8])
+                   .translateExtent([[-10, -10], [this.svgWidth+10, this.svgHeight+10]])
+                   .on('zoom', function(event) {
+                     d3.select("#choropleth-map").selectAll("path")
+                       .attr('transform', event.transform)
+                   });
+      d3.select(this.$refs.svgA).call(zoom);
     },
     getColorIndex(value, minVal, maxVal) {
       let idx = Math.trunc((value - minVal) / ((maxVal - minVal)*0.2));
@@ -119,10 +129,19 @@ export default {
 <style>
 
 .view-A {
+  position: relative;
   width: 41.5vw;
   height: 47.8vh;
   background-color: rgb(245, 245, 245);
   border: 1px solid #000000;
+}
+
+#svg-A {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
 }
 
 #empty-area {
