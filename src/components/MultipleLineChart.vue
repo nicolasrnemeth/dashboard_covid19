@@ -15,6 +15,7 @@ export default {
   },
   data() {
     return {
+      oldCharts: [],
       country: "",
       feature: "",
       chartData: [],
@@ -28,12 +29,27 @@ export default {
     }
   },
   mounted() {
-    
-    //setTimeout(() => {
-      
-    //}, 3000)
+    for (let d_ of this.data_)
+      this.addNewChart(d_.country, d_.feature, d_.data);
+    setTimeout(() => {
+      this.removeChart("AUT", "new_cases_smoothed");
+    }, 3000)
+    setTimeout(() => {
+      this.addNewChart("AUT", "new_cases_smoothed", this.data_[0].data);
+    }, 6000)
   },
   methods: {
+    removeChart(country, feature) {
+      document.getElementById(`div${country}${feature}`).remove();
+    },
+    addNewChart(country, feature, chartData) {
+      // Set info for next chart creation
+      this.country = country;
+      this.feature = feature;
+      this.chartData = chartData;
+      
+      this.createChart();
+    },
     setUpHtml() {
       let newSubView = d3.select(this.$refs.viewB)
                     .append("div")
@@ -41,15 +57,16 @@ export default {
                     .attr("id", `div${this.country}${this.feature}`);
       newSubView.html(`
         <svg id="svg${this.country}${this.feature}" class="singleSvg" preserveAspectRatio="none">
-          <g class="axis axis-x"></g>
-          <g class="axis axis-y"></g>
-          <g class="area_"></g>
-          <g class="line_"></g>
-          <g class="pointsGroup"></g>
+          <g class="chart_">
+            <g class="axis axis-x"></g>
+            <g class="axis axis-y"></g>
+            <g class="line_"></g>
+            <g class="pointsGroup"></g>
+          </g>
         </svg>
       `);
     },
-    addNewChart() {
+    createChart() {
       // Set up html skeleton for next chart
       this.setUpHtml();
       // Get size of added div
@@ -63,37 +80,38 @@ export default {
       this.yExtent = d3.extent(this.chartData, d => d.y);
       this.xExtent = d3.extent(this.chartData, d => d.x);
 
-      d3.select(`#${this.country}${this.feature}`)
+      d3.select(`#svg${this.country}${this.feature} .chart_`)
         .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
+      
       this.createXAxis();
       this.createYAxis();
       this.createLines();
     },
     createXAxis() {
-      let XAxis = d3.select(`#svg${this.country}${this.feature}.axis-x`);
+      let XAxis = d3.select(`#svg${this.country}${this.feature} .axis-x`);
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale(...this.xExtent))/*.tickFormat(d3.timeFormat("%m-%d-%y"))*/.tickValues([]));
+           .call(d3.axisBottom(this.xScale)/*.tickFormat(d3.timeFormat("%m-%d-%y"))*/.tickValues([]));
     },
     createYAxis() {
-      let YAxis = d3.select(`#svg${this.country}${this.feature}.axis-y`);
-      YAxis.call(d3.axisLeft(this.yScale(...this.yExtent)).tickValues([...this.yExtent, this.yExtent[1]/2]));
+      let YAxis = d3.select(`#svg${this.country}${this.feature} .axis-y`);
+      YAxis.call(d3.axisLeft(this.yScale).tickValues([/*...this.yExtent, this.yExtent[1]/2*/]));
       /*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/
     },
 
     createLines() {
       // Define the area under the line
       let area = d3.area()
-                   .x(d => this.xScale(...this.xExtent)(d.date))
+                   .x(d => this.xScale(d.x))
                    .y0(this.svgHeight - this.svgPadding.top - this.svgPadding.bottom)
-                   .y1(d =>  this.yScale(...this.yExtent)(d.feature));
+                   .y1(d =>  this.yScale(d.y));
 
       // Specify line
       let line = d3.line()
-                   .x(d => this.xScale(...this.xExtent)(d.date))
-                   .y(d => this.yScale(...this.yExtent)(d.feature));
+                   .x(d => this.xScale(d.x))
+                   .y(d => this.yScale(d.y));
 
       // Plot lines
-      const Line = d3.select(`#svg${this.country}${this.feature}.line_`);
+      const Line = d3.select(`#svg${this.country}${this.feature} .line_`);
 
       Line.append("path")
           .datum(this.chartData)
@@ -102,7 +120,6 @@ export default {
           .style("fill", "none")
           .style("stroke", "black")
           .style("stroke-width", 1.2)
-          //.attr("transform", "translate(0,10)")
           //.on("click", lineClick)
           //.on("mouseover", lineOver)
           //.on("mouseout", lineOut)
@@ -110,48 +127,48 @@ export default {
       
       // Add the area
       Line.append("path")
-          .datum(this.processed_data)
-          .attr("id", "area_")
+          .datum(this.chartData)
+          .attr("class", "area_")
           .attr("d", area);
     },
-    createAxesLabels() {
-      //let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
-      let translateY = this.svgHeight - this.svgPadding.top - this.svgPadding.bottom;
-
-      d3.select(this.$refs.yAxis)
+    createYAxisLabel(label) {
+      d3.select(`svg${this.country}${this.feature} .axis-y`)
         .append('text')
-        .text("y-axis-label")
+        .text(label)
+        .attr("class", "yLabel")
         .attr('transform', 'rotate(-90)')
-        .attr('y', '-3.5em')
-        .attr('x', -0.5*translateY)
+        .attr('y', "-3.5em")
+        .attr('x', -0.5*(this.svgHeight - this.svgPadding.top - this.svgPadding.bottom))
         .style('text-anchor', 'middle')
         .style('fill', 'black')
         .style('font-weight', 'bold');
-    
-      /*d3.select(this.$refs.xAxis)
+    },
+    createXAxisLabel(label) {
+      d3.select(`div${this.country}${this.feature}`)
         .append('text')
-        .text("x-axis-label")
-        .attr('x', 0.5*translateX)
-        .attr('y', '2.8em')
-        .style('fill', 'black')
+        .text(label)
+        .attr("class", "xLabel")
+        .attr('y', document.getElementById("view-B").clientHeight-25)
+        .attr('x', document.getElementById("view-B").clientWidth/2)
         .style('text-anchor', 'middle')
-        .style('font-weight', 'bold')*/
+        .style('fill', 'black')
+        .style('font-weight', 'bold');
     },
     toTime(dateString) {
       return d3.timeParse("%Y-%m-%d")(dateString);
     },
-    yScale(minVal, maxVal) {
-      return d3.scaleLinear()
-               .domain([minVal, maxVal])
-               .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
-    },
-    xScale(minVal, maxVal) {
-      return d3.scaleTime()
-               .domain([minVal, maxVal])
-               .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
-    }
   },
   computed: {
+    yScale() {
+      return d3.scaleLinear()
+               .domain(this.yExtent)
+               .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
+    },
+    xScale() {
+      return d3.scaleTime()
+               .domain(this.xExtent)
+               .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
+    },
     data_: {
       get() {
         return this.$store.getters.dataViewB;
@@ -188,8 +205,8 @@ export default {
   height: 100%;
 }
 
-#area_ {
-  fill: #8b8000;
+.area_ {
+  fill: purple;
 }
 
 </style>

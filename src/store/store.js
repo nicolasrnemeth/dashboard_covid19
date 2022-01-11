@@ -11,7 +11,7 @@ const store = new Vuex.Store({
     dataViewA: [],
     dataViewB: [],
     dataViewC: [],
-    dataViewD: [],
+    dataViewD: [], 
     dataViewE: [],
     selectionA: {
       date: "",
@@ -205,13 +205,13 @@ const store = new Vuex.Store({
   actions: {
     loadNPrepData(context) {
       //https://covid.ourworldindata.org/data/owid-covid-data.json
-      d3.json('./owid-covid-data_small.json').then((data) => {
+      d3.json('./owid-covid-data.json').then((data) => {
         // Parse entire dataset
         context.state.covidData = data; 
         // Prepare data for intial state of each view
-        //context.commit("prepDataViewB", context.state.selectionB);
-        //context.commit("prepDataViewC", context.state.selectionC);
-        //context.commit("prepDataViewD", context.state.selectionD);
+        context.commit("prepDataViewB", context.state.selectionB);
+        context.commit("prepDataViewC", context.state.selectionC);
+        context.commit("prepDataViewD", context.state.selectionD);
         // Allow DOM elements to be rendered only after data for each view is prepped
         context.state.dataIsReady = true;
         // Remove loading sign
