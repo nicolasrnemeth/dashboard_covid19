@@ -9,14 +9,7 @@ const store = new Vuex.Store({
     dataIsReady: false,
     covidData: [],
     dataViewA: [],
-    dataViewB: {
-      div1: {country: "", feature: "", data: []},
-      div2: {country: "", feature: "", data: []},
-      div3: {country: "", feature: "", data: []},
-      div4: {country: "", feature: "", data: []},
-      div5: {country: "", feature: "", data: []},
-      div6: {country: "", feature: "", data: []},
-    },
+    dataViewB: [],
     dataViewC: [],
     dataViewD: [],
     dataViewE: [],
@@ -26,7 +19,7 @@ const store = new Vuex.Store({
     },
     selectionB: {
       x: [],
-      ys: ["AUT", "DEU", "FRA", "IRL", "ITA", "SVK"],
+      ys: ["AUT", "DEU", "FRA", "IRL"],
       country: false,
       feature: "new_cases_smoothed",
     },
@@ -62,7 +55,7 @@ const store = new Vuex.Store({
             })
           }
         }
-        state.view_A = _data_;
+        state.dataViewA = _data_;
       }
     },*/
     prepDataViewB(state, selection) {
@@ -71,14 +64,19 @@ const store = new Vuex.Store({
         var left_date = d3.timeParse("%Y-%m-%d")(selection.x[0]);
         var right_date = d3.timeParse("%Y-%m-%d")(selection.x[1]);
       }
-      let idx = 1;
       let check = true;
+      state.dataViewB = [];
+      
       if (selection.feature) {
         check = false;
         for (let country of selection.ys) {
-          let _data_ = [];
-          state.dataViewB["div"+idx.toString()].country = country;
-          state.dataViewB["div"+idx.toString()].feature = selection.feature;
+          let obj = {
+            country: "", 
+            feature: "", 
+            data: [],
+          };
+          obj.country = country;
+          obj.feature = selection.feature;
 
           for (let day of state.covidData[country].data) {
             // Omit null values
@@ -89,36 +87,37 @@ const store = new Vuex.Store({
               if (date < left_date) continue;
               if (date > right_date) break;
             }
-            _data_.push({
+            obj.data.push({
               x: date,
               y: day[selection.feature],
             })
           }
-          state.dataViewB["div"+idx.toString()].data = _data_;
-          idx++;
+          state.dataViewB.push(obj);
         }
       }
       if (check && selection.country) {
-        for (let feature of selection.ys) {
-          state.dataViewB["div"+idx.toString()].data = [];
-          state.dataViewB["div"+idx.toString()].feature = feature;
-          state.dataViewB["div"+idx.toString()].country = selection.country;
-          idx++;
+        for (let feat of selection.ys) {
+          state.dataViewB.push({
+            country: selection.country,
+            feature: feat,
+            data: [],
+          })
         }
         for (let day of state.covidData[selection.country]) {
-          idx = 1;
           let date = d3.timeParse("%Y-%m-%d")(day.date);
           if (!date) continue;
           if (selection.x.length == 2) {
             if (date < left_date) continue;
             if (date > right_date) break;
           }
+          let idx = 0;
           for (let feature of selection.ys) {
             if (day[feature] == undefined) continue;
-            state.dataViewB["div"+idx.toString()].data.push({
+            state.dataViewB[idx].data.push({
               x: date,
               y: day[feature],
             })
+            idx++;
           }
         }
       }
@@ -149,7 +148,7 @@ const store = new Vuex.Store({
         });
       }
       // Set the state of view C
-      state.view_C = _data_;
+      state.dataViewC = _data_;
     },
     prepDataViewD(state, selection) {
       //let nullIDs = [];
@@ -190,29 +189,29 @@ const store = new Vuex.Store({
         count++;
       }
       // Set the state of view D
-      state.view_D = _data_;
+      state.dataViewD = _data_;
     },
     /*prepDataViewE(state, selection) {
 
     },*/
   },
   getters: {
-    dataViewA: state => state.view_A,
-    dataViewB: state => state.view_B,
-    dataViewC: state => state.view_C,
-    dataViewD: state => state.view_D,
-    dataViewE: state => state.view_E,
+    dataViewA: state => state.dataViewA,
+    dataViewB: state => state.dataViewB,
+    dataViewC: state => state.dataViewC,
+    dataViewD: state => state.dataViewD,
+    dataViewE: state => state.dataViewE,
   },
   actions: {
     loadNPrepData(context) {
       //https://covid.ourworldindata.org/data/owid-covid-data.json
-      d3.json('./owid-covid-data.json').then((data) => {
+      d3.json('./owid-covid-data_small.json').then((data) => {
         // Parse entire dataset
         context.state.covidData = data; 
         // Prepare data for intial state of each view
-        context.commit("prepDataViewB", context.state.selectionB);
-        context.commit("prepDataViewC", context.state.selectionC);
-        context.commit("prepDataViewD", context.state.selectionD);
+        //context.commit("prepDataViewB", context.state.selectionB);
+        //context.commit("prepDataViewC", context.state.selectionC);
+        //context.commit("prepDataViewD", context.state.selectionD);
         // Allow DOM elements to be rendered only after data for each view is prepped
         context.state.dataIsReady = true;
         // Remove loading sign

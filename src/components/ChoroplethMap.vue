@@ -1,6 +1,6 @@
 <template>
   <div class="view-A" ref="viewA">
-    <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet" preserveAspectRatio="none">
+    <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet" preserveAspectRatio="xMidYMid meet">
         <rect id="empty-area" ref="emptyArea"></rect>
         <g id="choropleth-map" ref="choroplethMap"></g>
         <!--<rect id="toolTip-A"></rect>-->

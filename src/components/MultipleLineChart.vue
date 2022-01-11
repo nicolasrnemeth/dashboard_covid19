@@ -1,24 +1,10 @@
 <template>
   <div class="view-B" ref="viewB">
-    <div class="singleDiv" ref="div1" v-show="showToggle.d1">Hello</div>
-    <div class="singleDiv" ref="div2" v-show="showToggle.d2">Hello</div>
-    <div class="singleDiv" ref="div3" v-show="showToggle.d3">Hello</div>
-    <div class="singleDiv" ref="div4" v-show="showToggle.d4">Hello</div>
-    <div class="singleDiv" ref="div5" v-show="showToggle.d5">Hello</div>
-    <div class="singleDiv" ref="div6" v-show="showToggle.d6">Hello</div>
     <!--<rect id="toolTip-B"></rect>-->
   </div>
 </template>
-<!--
-<svg id="svg-B" class="singleSvg" ref="svgB" v-show="viewBoxIsSet" preserveAspectRatio="none">
-  <g class="multiple-line-chart" ref="multipleLineChart">
-    <g class="axis axis-x" ref="xAxis"></g>
-    <g class="axis axis-y" ref="yAxis"></g>
-    <g class="line" ref="Line"></g>
-    <g class="point-group" ref="pointGroup"></g>
-  </g>
-</svg>
--->
+
+
 <script>
 
 import * as d3 from 'd3';
@@ -29,74 +15,88 @@ export default {
   },
   data() {
     return {
-      showToggle: {
-        d1: true, 
-        d2: true,
-        d3: true,
-        d4: true,
-        d5: true,
-        d6: true, 
-      },
-      viewBoxIsSet:false,
-      svgWidth: 100,
+      country: "",
+      feature: "",
+      chartData: [],
+      yExtent: [],
+      xExtent: [],
       svgHeight: 100,
+      svgWidth: 100,
       svgPadding: {
         top: 10, right: 15, bottom: 5, left: 45,
       },
-      processed_data: [],
     }
   },
   mounted() {
-    this.process_data("new_cases_smoothed");
-    this.createChart();
-    this.createAxesLabels();
-    setTimeout(() => {
-      this.ready=false;
-    }, 3000)
+    
+    //setTimeout(() => {
+      
+    //}, 3000)
   },
   methods: {
-    createChart() {
-      if (this.$refs.viewB) {
-        this.svgWidth = this.$refs.first.clientWidth; 
-        this.svgHeight = this.$refs.first.clientHeight;
-        // Set viewBox of svg and only then display it
-        document.getElementById("svg-B").setAttribute("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`);
-        this.viewBoxIsSet = true;
-      }
+    setUpHtml() {
+      let newSubView = d3.select(this.$refs.viewB)
+                    .append("div")
+                    .attr("class", "singleDiv")
+                    .attr("id", `div${this.country}${this.feature}`);
+      newSubView.html(`
+        <svg id="svg${this.country}${this.feature}" class="singleSvg" preserveAspectRatio="none">
+          <g class="axis axis-x"></g>
+          <g class="axis axis-y"></g>
+          <g class="area_"></g>
+          <g class="line_"></g>
+          <g class="pointsGroup"></g>
+        </svg>
+      `);
+    },
+    addNewChart() {
+      // Set up html skeleton for next chart
+      this.setUpHtml();
+      // Get size of added div
+      this.svgWidth = document.getElementById(`div${this.country}${this.feature}`).clientWidth; 
+      this.svgHeight = document.getElementById(`div${this.country}${this.feature}`).clientHeight;
+      // Set the viewbox for svg
+      document.getElementById(`svg${this.country}${this.feature}`)
+              .setAttribute("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`);
 
-      d3.select(this.$refs.multipleLineChart)
+      // Get y- and x-extent of data
+      this.yExtent = d3.extent(this.chartData, d => d.y);
+      this.xExtent = d3.extent(this.chartData, d => d.x);
+
+      d3.select(`#${this.country}${this.feature}`)
         .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
       this.createXAxis();
       this.createYAxis();
       this.createLines();
     },
     createXAxis() {
-      let XAxis = d3.select(this.$refs.xAxis)
+      let XAxis = d3.select(`#svg${this.country}${this.feature}.axis-x`);
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale).tickFormat(d3.timeFormat("%m-%d-%y")).tickValues([]));
+           .call(d3.axisBottom(this.xScale(...this.xExtent))/*.tickFormat(d3.timeFormat("%m-%d-%y"))*/.tickValues([]));
     },
     createYAxis() {
-      let [min_, max_, middle_] = [...this.yScale.domain(), this.yScale.domain()[1]/2];
-      let YAxis = d3.select(this.$refs.yAxis);
-      YAxis.call(d3.axisLeft(this.yScale).tickValues([min_, middle_, max_]));
+      let YAxis = d3.select(`#svg${this.country}${this.feature}.axis-y`);
+      YAxis.call(d3.axisLeft(this.yScale(...this.yExtent)).tickValues([...this.yExtent, this.yExtent[1]/2]));
       /*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/
     },
 
     createLines() {
       // Define the area under the line
       let area = d3.area()
-                   .x(d => this.xScale(d.date))
+                   .x(d => this.xScale(...this.xExtent)(d.date))
                    .y0(this.svgHeight - this.svgPadding.top - this.svgPadding.bottom)
-                   .y1(d =>  this.yScale(d.feature));
+                   .y1(d =>  this.yScale(...this.yExtent)(d.feature));
 
       // Specify line
-      let line = d3.line().x(d => this.xScale(d.date)).y(d => this.yScale(d.feature));
+      let line = d3.line()
+                   .x(d => this.xScale(...this.xExtent)(d.date))
+                   .y(d => this.yScale(...this.yExtent)(d.feature));
 
       // Plot lines
-      const Line = d3.select(this.$refs.Line);
+      const Line = d3.select(`#svg${this.country}${this.feature}.line_`);
 
       Line.append("path")
-          .datum(this.processed_data)
+          .datum(this.chartData)
           //.attr("class", "lines")
           .attr("d", line)
           .style("fill", "none")
@@ -140,35 +140,23 @@ export default {
     toTime(dateString) {
       return d3.timeParse("%Y-%m-%d")(dateString);
     },
-    dataExtent(feature) {
-      return d3.extent(this.processed_data, d => d[feature]);
-    },
-    process_data(feature) {
-      // Preprocess data
-      let processed_data = [];
-      for (let day of this.$store.state.covidData["AUT"].data) {
-        if (feature in day && day[feature] != undefined) {
-          processed_data.push({
-            date: this.toTime(day.date),
-            feature: day[feature],
-          });
-        }
-      }
-      this.processed_data = processed_data;
-    },
-  },
-
-  computed: {
-    xScale() {
-      return d3.scaleTime()
-               .domain(this.dataExtent("date"))
-               .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
-    },
-    yScale() {
+    yScale(minVal, maxVal) {
       return d3.scaleLinear()
-               .domain(this.dataExtent("feature"))
+               .domain([minVal, maxVal])
                .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
+    },
+    xScale(minVal, maxVal) {
+      return d3.scaleTime()
+               .domain([minVal, maxVal])
+               .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
     }
+  },
+  computed: {
+    data_: {
+      get() {
+        return this.$store.getters.dataViewB;
+      }
+    },
   },
   watch: {
     
@@ -184,7 +172,6 @@ export default {
   flex-direction: column;
   width: 41.5vw;
   height: 47.8vh;
-  background-color: rgb(211, 255, 215);
   border: 1px solid #000000;
 }
 
