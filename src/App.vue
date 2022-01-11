@@ -7,8 +7,8 @@
     <div v-if="$store.state.dataIsReady" class="container-fluid" id="dashboard">
       <div class="row">
         <div class="col-md-10">
-          <div class="app-title">
-            Visualization Dashboard - Covid-19 Pandemic
+          <div id="app-title" class="title_">
+            <strong>Visualization Dashboard - Covid-19 Pandemic</strong>
           </div>
           <div class="row">
             <div class="col">
@@ -65,12 +65,10 @@ body {
   display: block !important;
 }
 
-#appTitle {
-  text-align: start;
-  text-anchor: start;
+.title_ {
   font-weight: bold;
   font-family: Baskerville;
-  font-size: 24px;
+  font-size: 20px;
 }
 
 #app {
@@ -102,8 +100,8 @@ body {
   padding: 0px !important;
 }
 
-.app-title {
-  background-color: rosybrown;
+#app-title {
+  background-color: rgb(185, 185, 185);
   border: 1px solid #000000;
   width: calc(83vw + 1.5px);
   height: 3.9vh;

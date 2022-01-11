@@ -144,9 +144,9 @@ export default {
 .view-C {
   position: relative;
   width: 41.5vw;
-  height: 47.8vh;
+  height: 48.05vh;
   /*background-color: rgb(231, 249, 255);*/
-  border: 1px solid #000000;
+  border: 2px solid #000000;
 }
 
 #svg-C {

@@ -1,7 +1,6 @@
 <template>
   <div class="view-A" ref="viewA">
     <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet" preserveAspectRatio="xMidYMid meet">
-        <rect id="empty-area" ref="emptyArea"></rect>
         <g id="choropleth-map" ref="choroplethMap"></g>
         <!--<rect id="toolTip-A"></rect>-->
     </svg>
@@ -32,7 +31,6 @@ export default {
   },
   mounted() {
     this.createMap();
-    this.createEmptyArea();
     this.colorCountries("human_development_index");
   },
   methods: {
@@ -103,14 +101,6 @@ export default {
       const {l, c, h} = d3.lch(color);
       return d3.lch(l, c + 18 * k, h).formatHex();
     },
-    // Draw the empty area behind the usa map
-    createEmptyArea() {
-      let emptyArea = d3.select(this.$refs.emptyArea);
-      emptyArea.attr("height", this.svgHeight)
-               .attr("width", this.svgWidth)
-               //.on("click", this.handleEmptyAreaClick)
-               //.style('cursor', "pointer")
-    },
     // Deselect all selected states and therefore remove highlighting in scatterplot
     handleEmptyAreaClick() {
       return;
@@ -131,8 +121,9 @@ export default {
 .view-A {
   position: relative;
   width: 41.5vw;
-  height: 47.8vh;
-  border: 1px solid #000000;
+  height: 48.05vh;
+  border: 2px solid #000000;
+  background-color: rgba(0, 0, 238, 0.103);
 }
 
 #svg-A {
@@ -141,10 +132,6 @@ export default {
   top: 0;
   width: 100%;
   height: 100%;
-}
-
-#empty-area {
-  fill: rgba(0, 105, 148, 0.01);
 }
 
 </style>

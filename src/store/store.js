@@ -34,7 +34,7 @@ const store = new Vuex.Store({
     },
     selectionD: {
       x: [],
-      y: "people_fully_vaccinated_per_hundred",
+      y: "people_fully_vaccinated",
       countries: [],
       continent: "Europe",
     },
@@ -204,10 +204,9 @@ const store = new Vuex.Store({
   },
   actions: {
     loadNPrepData(context) {
-      //https://covid.ourworldindata.org/data/owid-covid-data.json
-      d3.json('./owid-covid-data.json').then((data) => {
+      d3.json('./owid-covid-data_preprocessed.json').then((data) => {
         // Parse entire dataset
-        context.state.covidData = data; 
+        context.state.covidData = data;
         // Prepare data for intial state of each view
         context.commit("prepDataViewB", context.state.selectionB);
         context.commit("prepDataViewC", context.state.selectionC);

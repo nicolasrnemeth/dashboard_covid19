@@ -15,7 +15,7 @@ export default {
   },
   data() {
     return {
-      oldCharts: [],
+      currentCharts: {},
       country: "",
       feature: "",
       chartData: [],
@@ -24,7 +24,7 @@ export default {
       svgHeight: 100,
       svgWidth: 100,
       svgPadding: {
-        top: 10, right: 15, bottom: 5, left: 45,
+        top: 10, right: 5, bottom: 5, left: 40,
       },
     }
   },
@@ -41,6 +41,14 @@ export default {
   methods: {
     removeChart(country, feature) {
       document.getElementById(`div${country}${feature}`).remove();
+      for (let chart in this.currentCharts)
+        if (chart == `${this.county}${this.feature}`)
+          delete this.currentCharts[chart];
+      // Get size of single div in view B
+      this.svgWidth = document.getElementsByClassName(`.singleDiv`)[0].clientWidth; 
+      this.svgHeight = document.getElementsByClassName(`.singleDiv`)[0].clientHeight;
+
+      this.updateYAxes();
     },
     addNewChart(country, feature, chartData) {
       // Set info for next chart creation
@@ -49,6 +57,15 @@ export default {
       this.chartData = chartData;
       
       this.createChart();
+      this.updateYAxes();
+    },
+    updateYAxes() {
+      for (let chart in this.currentCharts) {
+        if (chart != `${this.country}${this.feature}`) {
+          let chart;
+          console.log(chart)
+        }
+      }
     },
     setUpHtml() {
       let newSubView = d3.select(this.$refs.viewB)
@@ -80,6 +97,9 @@ export default {
       this.yExtent = d3.extent(this.chartData, d => d.y);
       this.xExtent = d3.extent(this.chartData, d => d.x);
 
+      // Add info about yExtent to currentCharts array
+      this.currentCharts[`${this.country}${this.feature}`] = [...this.yExtent];
+
       d3.select(`#svg${this.country}${this.feature} .chart_`)
         .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
       
@@ -90,11 +110,11 @@ export default {
     createXAxis() {
       let XAxis = d3.select(`#svg${this.country}${this.feature} .axis-x`);
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale)/*.tickFormat(d3.timeFormat("%m-%d-%y"))*/.tickValues([]));
+           .call(d3.axisBottom(this.xScale)/*.tickFormat(d3.timeFormat("%m-%d-%y"))*/.tickValues([]).tickSize(0));
     },
     createYAxis() {
       let YAxis = d3.select(`#svg${this.country}${this.feature} .axis-y`);
-      YAxis.call(d3.axisLeft(this.yScale).tickValues([/*...this.yExtent, this.yExtent[1]/2*/]));
+      YAxis.call(d3.axisLeft(this.yScale).tickValues([...this.yExtent]));
       /*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/
     },
 
@@ -188,8 +208,8 @@ export default {
   display: flex;
   flex-direction: column;
   width: 41.5vw;
-  height: 47.8vh;
-  border: 1px solid #000000;
+  height: 48.05vh;
+  border: 2px solid #000000;
 }
 
 .singleSvg {

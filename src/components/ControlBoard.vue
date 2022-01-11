@@ -1,9 +1,8 @@
 <template>
   <div class="view-E" ref="viewE">
-    Control Board
-    <!--<svg class="svg-E" :width="svgWidth" :height="svgHeight" ref="svgE">-->
-      <!-- placeholder -->
-    <!--</svg>-->
+    <div id="control-title" class="title_">
+      <strong>Control Board</strong>
+    </div>
   </div> 
 </template>
 
@@ -17,9 +16,7 @@ export default {
   },
   data() {
     return {
-      svgWidth: 500,
-      svgHeight: 500,
-      svgPadding: {
+      divPadding: {
         top: 0, right: 0, bottom: 30, left: 0,
       },
     }
@@ -52,10 +49,10 @@ export default {
 <style scoped>
 
 .view-E {
-  width: 16.666667vw;
-  height: 99.5vh;
+  width: 17vw;
+  height: 100vh;
   background-color: rgb(128, 128, 128);
-  border: 1px solid #000000;
+  border: 2px solid #000000;
 }
 
 </style>
