@@ -209,7 +209,7 @@ export default {
   flex-direction: column;
   width: 41.5vw;
   height: 48.05vh;
-  border: 2px solid #000000;
+  border: 1px solid #000000;
 }
 
 .singleSvg {

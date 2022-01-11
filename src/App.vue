@@ -6,7 +6,7 @@
     </div>
     <div v-if="$store.state.dataIsReady" class="container-fluid" id="dashboard">
       <div class="row">
-        <div class="col-md-10">
+        <div class="col-left">
           <div id="app-title" class="title_">
             <strong>Visualization Dashboard - Covid-19 Pandemic</strong>
           </div>
@@ -21,7 +21,7 @@
             </div>
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-right">
           <ControlBoard/>
         </div>
       </div>
@@ -82,7 +82,6 @@ body {
 .container-fluid {
   margin: 0px !important;
   padding: 0px !important;
-  border: 1px solid #000000;
 }
 
 .row {
@@ -95,15 +94,30 @@ body {
   padding: 0px !important;
 }
 
-.col-md-2, .col-md-10 {
-  margin: 0px !important;
-  padding: 0px !important;
+.col-left {
+  position: relative;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+  -ms-flex: 0 0 83%;
+  flex: 0 0 83%;
+  max-width: 83%;
+}
+
+.col-right {
+  position: relative;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+  -ms-flex: 0 0 17%;
+  flex: 0 0 17%;
+  max-width: 17%;
 }
 
 #app-title {
   background-color: rgb(185, 185, 185);
   border: 1px solid #000000;
-  width: calc(83vw + 1.5px);
+  width: 83vw;
   height: 3.9vh;
   vertical-align: middle; 
   line-height: 3.9vh;

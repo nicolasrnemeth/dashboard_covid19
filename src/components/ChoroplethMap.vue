@@ -122,7 +122,7 @@ export default {
   position: relative;
   width: 41.5vw;
   height: 48.05vh;
-  border: 2px solid #000000;
+  border: 1px solid #000000;
   background-color: rgba(0, 0, 238, 0.103);
 }
 

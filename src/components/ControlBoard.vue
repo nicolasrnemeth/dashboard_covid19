@@ -51,8 +51,8 @@ export default {
 .view-E {
   width: 17vw;
   height: 100vh;
-  background-color: rgb(128, 128, 128);
-  border: 2px solid #000000;
+  background-color: rgb(185, 185, 185);
+  border: 1px solid #000000;
 }
 
 </style>

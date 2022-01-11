@@ -146,7 +146,7 @@ export default {
   width: 41.5vw;
   height: 48.05vh;
   /*background-color: rgb(231, 249, 255);*/
-  border: 2px solid #000000;
+  border: 1px solid #000000;
 }
 
 #svg-C {
