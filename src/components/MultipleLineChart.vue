@@ -209,7 +209,7 @@ export default {
 .singleDiv {
   position: relative;
   height: 100%;
-  font-size: 1.8vh;
+  font-size: calc((1.8vh + 1vw)/2);
 }
 
 .yLabels {
