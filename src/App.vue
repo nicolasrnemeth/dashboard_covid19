@@ -115,12 +115,13 @@ body {
 }
 
 #app-title {
-  background-color: rgb(185, 185, 185);
-  border: 1px solid #000000;
-  width: 83vw;
+  background-color: lightskyblue;
+  width: calc(83vw - 1px);
   height: 3.9vh;
   vertical-align: middle; 
   line-height: 3.9vh;
+  border-radius: 5px;
+  margin: 1px 1px 0px 1px;
 }
 
 </style>

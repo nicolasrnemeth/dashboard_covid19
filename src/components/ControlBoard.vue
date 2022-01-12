@@ -45,14 +45,14 @@ export default {
 
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
+<style>
 
 .view-E {
-  width: 17vw;
-  height: 100vh;
-  background-color: rgb(185, 185, 185);
-  border: 1px solid #000000;
+  width: calc(17vw - 2px);
+  height: calc(100vh - 3px);
+  background-color: lightskyblue;
+  border-radius: 5px;
+  margin: 1px;
 }
 
 </style>

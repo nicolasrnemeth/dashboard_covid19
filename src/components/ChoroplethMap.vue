@@ -120,10 +120,12 @@ export default {
 
 .view-A {
   position: relative;
-  width: 41.5vw;
-  height: 48.05vh;
+  width: calc(41.5vw - 2px);
+  height: calc(48.05vh - 2px);
   border: 1px solid #000000;
-  background-color: rgba(0, 0, 238, 0.103);
+  border-radius: 5px;
+  box-shadow: 0 0 4px black;
+  margin: 1px;
 }
 
 #svg-A {

@@ -1,5 +1,6 @@
 <template>
   <div class="view-B" ref="viewB">
+    <!--<rect id="mouse-area"></rect>-->
     <!--<rect id="toolTip-B"></rect>-->
   </div>
 </template>
@@ -15,7 +16,7 @@ export default {
   },
   data() {
     return {
-      currentCharts: {},
+      currentCharts: [],
       country: "",
       feature: "",
       chartData: [],
@@ -31,24 +32,22 @@ export default {
   mounted() {
     for (let d_ of this.data_)
       this.addNewChart(d_.country, d_.feature, d_.data);
-    setTimeout(() => {
-      this.removeChart("AUT", "new_cases_smoothed");
-    }, 3000)
+    this.removeChart("AUT", "new_cases_smoothed");
     setTimeout(() => {
       this.addNewChart("AUT", "new_cases_smoothed", this.data_[0].data);
-    }, 6000)
+    }, 6000);
   },
   methods: {
+    updateYAxesLabels() {
+
+    },
     removeChart(country, feature) {
       document.getElementById(`div${country}${feature}`).remove();
-      for (let chart in this.currentCharts)
-        if (chart == `${this.county}${this.feature}`)
-          delete this.currentCharts[chart];
-      // Get size of single div in view B
-      this.svgWidth = document.getElementsByClassName(`.singleDiv`)[0].clientWidth; 
-      this.svgHeight = document.getElementsByClassName(`.singleDiv`)[0].clientHeight;
-
-      this.updateYAxes();
+      const idx = this.currentCharts.indexOf(`${country}${feature}`);
+      if (idx > -1)
+        this.currentCharts.splice(idx, 1);
+      
+      this.updateYAxesLabels();
     },
     addNewChart(country, feature, chartData) {
       // Set info for next chart creation
@@ -57,15 +56,7 @@ export default {
       this.chartData = chartData;
       
       this.createChart();
-      this.updateYAxes();
-    },
-    updateYAxes() {
-      for (let chart in this.currentCharts) {
-        if (chart != `${this.country}${this.feature}`) {
-          let chart;
-          console.log(chart)
-        }
-      }
+      this.updateYAxesLabels();
     },
     setUpHtml() {
       let newSubView = d3.select(this.$refs.viewB)
@@ -76,9 +67,7 @@ export default {
         <svg id="svg${this.country}${this.feature}" class="singleSvg" preserveAspectRatio="none">
           <g class="chart_">
             <g class="axis axis-x"></g>
-            <g class="axis axis-y"></g>
             <g class="line_"></g>
-            <g class="pointsGroup"></g>
           </g>
         </svg>
       `);
@@ -90,6 +79,8 @@ export default {
       this.svgWidth = document.getElementById(`div${this.country}${this.feature}`).clientWidth; 
       this.svgHeight = document.getElementById(`div${this.country}${this.feature}`).clientHeight;
       // Set the viewbox for svg
+      console.log(this.country);
+      console.log([this.svgHeight, this.svgWidth]);
       document.getElementById(`svg${this.country}${this.feature}`)
               .setAttribute("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`);
 
@@ -97,14 +88,16 @@ export default {
       this.yExtent = d3.extent(this.chartData, d => d.y);
       this.xExtent = d3.extent(this.chartData, d => d.x);
 
-      // Add info about yExtent to currentCharts array
-      this.currentCharts[`${this.country}${this.feature}`] = [...this.yExtent];
+      // Add id to collection of current chart ids
+      this.currentCharts.push(`${this.country}${this.feature}`);
 
       d3.select(`#svg${this.country}${this.feature} .chart_`)
         .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
       
       this.createXAxis();
-      this.createYAxis();
+      this.createYAxisLabel(`${this.country}${this.feature}`, this.country,
+                            100,
+                            this.svgHeight - this.svgPadding.top - this.svgPadding.bottom);
       this.createLines();
     },
     createXAxis() {
@@ -112,12 +105,6 @@ export default {
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
            .call(d3.axisBottom(this.xScale)/*.tickFormat(d3.timeFormat("%m-%d-%y"))*/.tickValues([]).tickSize(0));
     },
-    createYAxis() {
-      let YAxis = d3.select(`#svg${this.country}${this.feature} .axis-y`);
-      YAxis.call(d3.axisLeft(this.yScale).tickValues([...this.yExtent]));
-      /*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/
-    },
-
     createLines() {
       // Define the area under the line
       let area = d3.area()
@@ -151,25 +138,26 @@ export default {
           .attr("class", "area_")
           .attr("d", area);
     },
-    createYAxisLabel(label) {
-      d3.select(`svg${this.country}${this.feature} .axis-y`)
+    createYAxisLabel(chartID, label, x, y) {
+      d3.select(`#div${chartID}`)
         .append('text')
         .text(label)
         .attr("class", "yLabel")
         .attr('transform', 'rotate(-90)')
-        .attr('y', "-3.5em")
-        .attr('x', -0.5*(this.svgHeight - this.svgPadding.top - this.svgPadding.bottom))
+        .attr('y', x)
+        .attr('x', y)
         .style('text-anchor', 'middle')
         .style('fill', 'black')
-        .style('font-weight', 'bold');
+        .style('font-weight', 'bold')
+        .style('font-size', "10px");
     },
-    createXAxisLabel(label) {
+    createXAxisLabel(label, x, y) {
       d3.select(`div${this.country}${this.feature}`)
         .append('text')
         .text(label)
         .attr("class", "xLabel")
-        .attr('y', document.getElementById("view-B").clientHeight-25)
-        .attr('x', document.getElementById("view-B").clientWidth/2)
+        .attr('y', y)
+        .attr('x', x)
         .style('text-anchor', 'middle')
         .style('fill', 'black')
         .style('font-weight', 'bold');
@@ -207,9 +195,12 @@ export default {
 .view-B {
   display: flex;
   flex-direction: column;
-  width: 41.5vw;
-  height: 48.05vh;
+  width: calc(41.5vw - 2px);
+  height: calc(48.05vh - 2px);
   border: 1px solid #000000;
+  border-radius: 5px;
+  box-shadow: 0 0 4px black;
+  margin: 1px;
 }
 
 .singleSvg {
