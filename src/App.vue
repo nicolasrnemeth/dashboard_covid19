@@ -122,6 +122,7 @@ body {
   line-height: 3.9vh;
   border-radius: 5px;
   margin: 1px 1px 0px 1px;
+  border: 1px solid #000000;
 }
 
 </style>

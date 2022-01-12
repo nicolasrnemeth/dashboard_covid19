@@ -53,6 +53,7 @@ export default {
   background-color: lightskyblue;
   border-radius: 5px;
   margin: 1px;
+  border: 1px solid #000000;
 }
 
 </style>

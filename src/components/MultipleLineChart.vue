@@ -138,18 +138,13 @@ export default {
           .attr("class", "area_")
           .attr("d", area);
     },
-    createYAxisLabel(chartID, label, x, y) {
+    createYAxisLabel(chartID, label) {
+      //let h = document.getElementById(`div${chartID}`).clientHeight;
       d3.select(`#div${chartID}`)
+        .append("span")
+        .attr("class", "yLabels")
         .append('text')
         .text(label)
-        .attr("class", "yLabel")
-        .attr('transform', 'rotate(-90)')
-        .attr('y', x)
-        .attr('x', y)
-        .style('text-anchor', 'middle')
-        .style('fill', 'black')
-        .style('font-weight', 'bold')
-        .style('font-size', "10px");
     },
     createXAxisLabel(label, x, y) {
       d3.select(`div${this.country}${this.feature}`)
@@ -214,6 +209,16 @@ export default {
 .singleDiv {
   position: relative;
   height: 100%;
+  font-size: 1.8vh;
+}
+
+.yLabels {
+  display: inline-block;
+  transform: rotate(-90deg);
+  top: 50%;
+  left: -48%;
+  position: relative;
+  font-weight: bold;
 }
 
 .area_ {

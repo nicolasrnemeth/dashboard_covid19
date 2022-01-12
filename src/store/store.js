@@ -204,7 +204,10 @@ const store = new Vuex.Store({
   },
   actions: {
     loadNPrepData(context) {
-      d3.json('./owid-covid-data_preprocessed.json').then((data) => {
+      d3.json('./owid-covid-data.json').then((data) => {
+        // Freeze the data object, since values only need to be read
+        // 1) decrease memory usage and 2) speed up initial loading times
+        Object.freeze(data);
         // Parse entire dataset
         context.state.covidData = data;
         // Prepare data for intial state of each view
