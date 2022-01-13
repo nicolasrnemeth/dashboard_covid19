@@ -8,7 +8,7 @@
       <div class="row">
         <div class="col-left">
           <div id="app-title" class="title_">
-            <strong>Visualization Dashboard - Covid-19 Pandemic</strong>
+            Visualization Dashboard - Covid-19 Pandemic
           </div>
           <div class="row">
             <div class="col">
@@ -68,7 +68,8 @@ body {
 .title_ {
   font-weight: bold;
   font-family: Baskerville;
-  font-size: 20px;
+  font-weight: bold;
+  font-size: calc((2.1vh + 2.1vw)/2);
 }
 
 #app {

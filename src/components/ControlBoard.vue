@@ -1,7 +1,7 @@
 <template>
   <div class="view-E" ref="viewE">
     <div id="control-title" class="title_">
-      <strong>Control Board</strong>
+      Control Board
     </div>
   </div> 
 </template>
@@ -46,6 +46,10 @@ export default {
 </script>
 
 <style>
+
+#control-title {
+  transform: translateY(-10%);
+}
 
 .view-E {
   width: calc(17vw - 2px);

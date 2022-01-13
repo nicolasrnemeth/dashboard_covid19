@@ -1,7 +1,14 @@
 <template>
-  <div class="view-B" ref="viewB">
-    <!--<rect id="mouse-area"></rect>-->
-    <!--<rect id="toolTip-B"></rect>-->
+  <div id="ViewB_" class="view-B" ref="viewB">
+    <div id="mouse-line"></div>
+    <div id="toolTip-B">This is so awesome</div>
+    <div class="chart-container" ref="chartContainer">
+      <div id="feature_title" class="singleDiv">
+        <span id="x_label">
+          New cases smoothed
+        </span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -25,29 +32,42 @@ export default {
       svgHeight: 100,
       svgWidth: 100,
       svgPadding: {
-        top: 10, right: 5, bottom: 5, left: 40,
+        top: 3, right: 5, bottom: 3, left: 30,
       },
     }
   },
   mounted() {
     for (let d_ of this.data_)
       this.addNewChart(d_.country, d_.feature, d_.data);
-    this.removeChart("AUT", "new_cases_smoothed");
-    setTimeout(() => {
-      this.addNewChart("AUT", "new_cases_smoothed", this.data_[0].data);
-    }, 6000);
   },
   methods: {
-    updateYAxesLabels() {
-
+    rectMouseOver() {
+      d3.select("#toolTip-B")
+        .style("opacity", 1);
+      d3.select("#mouse-line")
+        .style("opacity", 1);
+    },
+    rectMouseMove(event) {
+      const domElem = d3.select("#ViewB_").node();
+      let [x, y] = d3.pointer(event, domElem);
+      d3.select("#toolTip-B")
+        .html("{placeholder}")
+        .style("left", `${x+20}px`)
+        .style("top", `${y}px`);
+      d3.select("#mouse-line")
+        .style("left", `${x}px`);
+    },
+    rectMouseLeave() {
+      d3.select("#toolTip-B")
+        .style("opacity", 0);
+      d3.select("#mouse-line")
+        .style("opacity", 0);
     },
     removeChart(country, feature) {
       document.getElementById(`div${country}${feature}`).remove();
       const idx = this.currentCharts.indexOf(`${country}${feature}`);
       if (idx > -1)
         this.currentCharts.splice(idx, 1);
-      
-      this.updateYAxesLabels();
     },
     addNewChart(country, feature, chartData) {
       // Set info for next chart creation
@@ -56,19 +76,19 @@ export default {
       this.chartData = chartData;
       
       this.createChart();
-      this.updateYAxesLabels();
     },
     setUpHtml() {
-      let newSubView = d3.select(this.$refs.viewB)
-                    .append("div")
-                    .attr("class", "singleDiv")
-                    .attr("id", `div${this.country}${this.feature}`);
+      let newSubView = d3.select(this.$refs.chartContainer)
+                         .append("div")
+                         .attr("class", "singleDiv")
+                         .attr("id", `div${this.country}${this.feature}`);
       newSubView.html(`
         <svg id="svg${this.country}${this.feature}" class="singleSvg" preserveAspectRatio="none">
           <g class="chart_">
             <g class="axis axis-x"></g>
             <g class="line_"></g>
           </g>
+          <rect class="mouse-area"></rect>
         </svg>
       `);
     },
@@ -79,8 +99,6 @@ export default {
       this.svgWidth = document.getElementById(`div${this.country}${this.feature}`).clientWidth; 
       this.svgHeight = document.getElementById(`div${this.country}${this.feature}`).clientHeight;
       // Set the viewbox for svg
-      console.log(this.country);
-      console.log([this.svgHeight, this.svgWidth]);
       document.getElementById(`svg${this.country}${this.feature}`)
               .setAttribute("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`);
 
@@ -93,11 +111,20 @@ export default {
 
       d3.select(`#svg${this.country}${this.feature} .chart_`)
         .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
+
+      // Define actions of mouse area
+      d3.select(`#svg${this.country}${this.feature} .mouse-area`)
+        .attr("transform", `translate(${this.svgPadding.left}, 0)`)
+        .attr("width", this.svgWidth-this.svgPadding.left-this.svgPadding.right)
+        .attr("height", this.svgHeight)
+        .attr("fill", "white")
+        .attr("opacity", 0)
+        .on("mouseover", this.rectMouseOver)
+        .on("mousemove", this.rectMouseMove)
+        .on("mouseleave", this.rectMouseLeave);
       
       this.createXAxis();
-      this.createYAxisLabel(`${this.country}${this.feature}`, this.country,
-                            100,
-                            this.svgHeight - this.svgPadding.top - this.svgPadding.bottom);
+      this.createYAxisLabel(`${this.country}${this.feature}`, this.country);
       this.createLines();
     },
     createXAxis() {
@@ -144,7 +171,7 @@ export default {
         .append("span")
         .attr("class", "yLabels")
         .append('text')
-        .text(label)
+        .text(label);
     },
     createXAxisLabel(label, x, y) {
       d3.select(`div${this.country}${this.feature}`)
@@ -188,14 +215,20 @@ export default {
 <style>
 
 .view-B {
-  display: flex;
-  flex-direction: column;
   width: calc(41.5vw - 2px);
   height: calc(48.05vh - 2px);
   border: 1px solid #000000;
   border-radius: 5px;
   box-shadow: 0 0 4px black;
   margin: 1px;
+  overflow: hidden !important;
+}
+
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
 }
 
 .singleSvg {
@@ -223,6 +256,36 @@ export default {
 
 .area_ {
   fill: purple;
+}
+
+#toolTip-B {
+  position: absolute;
+  z-index: 2;
+  background-color: lightgrey;
+  border-radius: 5px;
+  border: 1px solid #000000;
+  box-shadow: 0 0 4px black;
+  font-size: calc((1.8vh + 1vw)/2);
+  position: absolute;
+}
+
+#feature_title{
+  height: 10vh !important;
+  font-weight: bold;
+}
+
+#x_label {
+  left: 5.86%;
+  position: relative;
+}
+
+#mouse-line {
+  position: absolute;
+  left: 50px;
+  top: 3%;
+  width: 0px;
+  height: 46.5%;
+  border: 1px solid rgba(0,0,0,0.4);
 }
 
 </style>
