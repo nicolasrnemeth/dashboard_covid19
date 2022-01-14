@@ -28,8 +28,6 @@ const store = new Vuex.Store({
       dateRange: [],
       x: "gdp_per_capita",
       y: "cardiovasc_death_rate",
-      colorChannel: "",
-      sizeChannel: "",
       countries: [],
       continent: "Europe",
     },
@@ -163,8 +161,6 @@ const store = new Vuex.Store({
           iso_code: country,
           x: state.covidData[country][selection.x],
           y: state.covidData[country][selection.y],
-          colChannel: "",
-          sizeChannel: "",
         });
       }
       // Set the state of view C

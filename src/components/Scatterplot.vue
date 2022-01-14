@@ -22,6 +22,9 @@ export default {
   data() {
     return {
       viewBoxIsSet: false,
+      selectedCountries: [],
+      colorChannelFeature: "people_fully_vaccinated_per_hundred",
+      sizeChannelFeature: "total_deaths_per_million",
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
@@ -33,6 +36,7 @@ export default {
     this.createChart();
     // Create axes labels only once to avoid overlaying multiple texts
     this.createAxesLabels();
+    this.resizePoints();
   },
   methods: {
     // Draw scatterplot including axes points and bivariate color scheme
@@ -90,28 +94,65 @@ export default {
                  .data(this.data_)
                  .join('circle')
                  .attr('class', 'points')
-                 //.attr('id', d => d..replaceAll(" ", "")+"_point")
+                 .attr('id', d => d.iso_code.replaceAll(" ", "")+"_point")
                  .attr('cx', d => this.xScale(d.x))
                  .attr('cy', d => this.yScale(d.y))
                  .attr('r', 2)
-                 //.style('fill-opacity', 0)
                  .style('fill', '#00ff15')
                  .style('stroke', 'black')
                  .style('stroke-width', 0.7);
+
+      pointsGroup.selectAll("text")
+                .data(this.data_)
+                .enter()
+                .append("text")
+                .text(d => d.iso_code)
+                .attr("x", d => this.xScale(d.x)+7)
+                .attr("y", d => this.yScale(d.y))
+                .style("font-size", "8px")
+                .style("text-anchor", "start");
     },
     // Add space between marks and plot borders
-    addSpacing(minVal, maxVal, down=0.02, up=1.02) {
+    addSpacing(minVal, maxVal, down=0.1, up=1.1) {
       return [minVal-down*maxVal, up*maxVal];
     },
     // Apply color channel
     colorPoints() {
 
     },
+    // Apply size channel
+    resizePoints() {
+      for (let country of this.data_) {
+        let sizeVal = null;
+        if (this.sizeChannelFeature in this.covidData[country.iso_code])
+          sizeVal = this.covidData[country.iso_code][this.sizeChannelFeature];
+        else {
+          if ("data" in this.covidData[country.iso_code]) {
+            for (let idx=this.covidData[country.iso_code].data.length-1; idx >= 0; idx--)
+              if (this.sizeChannelFeature in this.covidData[country.iso_code].data[idx]) {
+                sizeVal = this.covidData[country.iso_code].data[idx][this.sizeChannelFeature];
+                break;
+              }
+          }
+        }
+        if (sizeVal)
+          d3.select(`#${country.iso_code}_point`)
+            .attr("r", ((sizeVal*0.05)/Math.PI)**0.5);
+        else
+          d3.select(`#${country.iso_code}_point`)
+            .attr("r", 0);
+      }
+    },
     dataExtent(feature) {
       return d3.extent(this.data_, d => d[feature]);
     },
   },
   computed: {
+    covidData: {
+      get() {
+        return this.$store.getters.covidData;
+      }
+    },
     data_: {
       get() {
         return this.$store.getters.dataViewC;

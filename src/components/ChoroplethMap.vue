@@ -34,7 +34,7 @@ export default {
     this.createMap();
     this.colorCountries(this.currentFeatureSelection);
     this.setUpMouseEvents();
-    this.setUpToolTipA();
+    this.setUpToolTipAAndDiv();
   },
   methods: {
     // Format feature variable text
@@ -50,7 +50,7 @@ export default {
       d3.select("#toolTip-A")
         .style("opacity", 1);
     },
-    setUpToolTipA() {
+    setUpToolTipAAndDiv() {
       // Define that toolTip does not disappear should user move mouse faster
       // than the tooltip moves should that the invisible rect does not trigger
       // anymore the mouse events
@@ -58,6 +58,34 @@ export default {
         .on("mousemove", this.handleMouseMove)
         .on("mouseleave", this.handleMouseLeave)
         .on("mouseover", this.handleMouseOver)
+      d3.select(this.$refs.viewA)
+        .on("mousemove", this.handleMouseMoveDiv)
+    },
+    handleMouseMoveDiv(event) {
+      // Update content and position of toolTipA
+      const domElem = d3.select(this.$refs.viewA).node();
+      let [x, y] = d3.pointer(event, domElem);
+      let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
+      let tTA = d3.select("#toolTip-A");
+      let [tTw, tTh] = [tTA.node().clientWidth, tTA.node().clientHeight];
+
+      // Ensure that toolTip does not cross boundary of parent container
+      if (x <= oDivWidth/2 && y <= oDivHeight/2) {
+        tTA.style("left", `${x+20}px`)
+           .style("top", `${y}px`);
+      }
+      if (x > oDivWidth/2 && y > oDivHeight/2) {
+        tTA.style("left", `${x-tTw-20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x < oDivWidth/2 && y > oDivHeight/2) {
+        tTA.style("left", `${x+20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x > oDivWidth/2 && y < oDivHeight/2) {
+        tTA.style("left", `${x-tTw-20}px`)
+           .style("top", `${y}px`);
+      }
     },
     handleMouseMove(event, d) {
       // Update content and position of toolTipA
@@ -65,12 +93,15 @@ export default {
       let [x, y] = d3.pointer(event, domElem);
       let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
 
-      let toolTipContent = `<strong>${d.properties.name}</strong><br/>`;
-      toolTipContent += `${this.formatFeatureText(this.currentFeatureSelection)}: `
-      if (this.covidData[d.properties.iso_a3][this.currentFeatureSelection])
-        toolTipContent += `${this.covidData[d.properties.iso_a3][this.currentFeatureSelection]}`;
-      else
-        toolTipContent += null;
+      let toolTipContent = null;
+      if (d) {
+        toolTipContent = `<strong>${d.properties.name}</strong><br/>`;
+        toolTipContent += `${this.formatFeatureText(this.currentFeatureSelection)}: `;
+        if (this.covidData[d.properties.iso_a3] && this.currentFeatureSelection in this.covidData[d.properties.iso_a3])
+          toolTipContent += `${this.covidData[d.properties.iso_a3][this.currentFeatureSelection]}`;
+        else
+          toolTipContent += null;
+      }
 
       let tTA = d3.select("#toolTip-A")
                   .html(`${toolTipContent}`);
