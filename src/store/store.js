@@ -222,6 +222,7 @@ const store = new Vuex.Store({
     dataViewD: state => state.dataViewD,
     dataViewE: state => state.dataViewE,
     extentDatesViewB: state => state.extentDates,
+    covidData: state => state.covidData,
   },
   actions: {
     loadNPrepData(context) {

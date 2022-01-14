@@ -1,7 +1,7 @@
 <template>
   <div id="ViewB_" class="view-B" ref="viewB">
     <div id="mouse-line"></div>
-    <div id="toolTip-B"></div>
+    <div id="toolTip-B" class="ToolTip"></div>
     <div class="chart-container" ref="chartContainer">
       <div id="feature_title" class="singleDiv">
         <span id="x_label"></span>
@@ -44,7 +44,7 @@ export default {
       for (let idx=0; idx < formattedText.length; idx++)
          formattedText[idx] = formattedText[idx].charAt(0).toUpperCase() 
                               + formattedText[idx].substring(1);
-      return formattedText;
+      return formattedText.join(" ");
     },
     addChartsAndAddXTitle() {
       for (let d_ of this.data_)
@@ -52,7 +52,7 @@ export default {
       
       if (this.labelXByFeature) {
         let formattedXLabel = this.formatFeatureText(Object.values(this.currentCharts)[0].feature);
-        d3.select("#x_label").html(formattedXLabel.join(" "));
+        d3.select("#x_label").html(formattedXLabel);
       }
       else
         d3.select("#x_label").html(this.data_[0].country);
@@ -90,11 +90,11 @@ export default {
         yValues.push(obj.data[idx].y);
       }
       // Format and prep content for tool tip
-      let toolTipContent = "Date: " + d3.timeFormat("%d/%m/%y")(date) + "<br/><br/>";
+      let toolTipContent = "<strong>Date: " + d3.timeFormat("%d/%m/%y")(date) + "</strong><br/>";
       let idxY = 0;
       for (let chartObj of Object.values(this.currentCharts)) {
         if (this.labelXByFeature) {
-          toolTipContent += `${chartObj.country}: ${yValues[idxY]}`;
+          toolTipContent += `<strong>${chartObj.country}</strong>: ${yValues[idxY]}`;
           if (idxY < yValues.length-1)
             toolTipContent += "<br/>";
         }
@@ -110,6 +110,8 @@ export default {
       let tTB = d3.select("#toolTip-B")
                   .html(`${toolTipContent}`);
       let [tTw, tTh] = [tTB.node().clientWidth, tTB.node().clientHeight];
+
+      // Ensure that toolTip does not cross boundary of parent container
       if (x <= oDivWidth/2 && y <= oDivHeight/2) {
         tTB.style("left", `${x+20}px`)
            .style("top", `${y}px`);
@@ -337,18 +339,6 @@ export default {
 
 .area_ {
   fill: purple;
-}
-
-#toolTip-B {
-  position: absolute;
-  z-index: 2;
-  background-color: lightgray;
-  border-radius: 5px;
-  border: 1px solid #000000;
-  font-size: calc((1.8vh + 1vw)/2);
-  font-family: Baskerville;
-  text-align: left !important;
-  text-anchor: start !important;
 }
 
 #feature_title{

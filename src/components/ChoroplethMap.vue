@@ -2,8 +2,8 @@
   <div class="view-A" ref="viewA">
     <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet" preserveAspectRatio="xMidYMid meet">
         <g id="choropleth-map" ref="choroplethMap"></g>
-        <!--<rect id="toolTip-A"></rect>-->
     </svg>
+    <div id="toolTip-A" class="ToolTip"></div>
   </div>
 </template>
 
@@ -22,6 +22,7 @@ export default {
         "#fef0d9", "#fdcc8a", "#fc8d59", "#e34a33", "#b30000"
       ],
       viewBoxIsSet: false,
+      currentFeatureSelection: "human_development_index",
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
@@ -31,9 +32,80 @@ export default {
   },
   mounted() {
     this.createMap();
-    this.colorCountries("human_development_index");
+    this.colorCountries(this.currentFeatureSelection);
+    this.setUpMouseEvents();
+    this.setUpToolTipA();
   },
   methods: {
+    // Format feature variable text
+    formatFeatureText(text) {
+      let formattedText = text.split("_");
+      for (let idx=0; idx < formattedText.length; idx++)
+         formattedText[idx] = formattedText[idx].charAt(0).toUpperCase() 
+                              + formattedText[idx].substring(1);
+      return formattedText.join(" ");
+    },
+    // Define Mouse functions
+    handleMouseOver() {
+      d3.select("#toolTip-A")
+        .style("opacity", 1);
+    },
+    setUpToolTipA() {
+      // Define that toolTip does not disappear should user move mouse faster
+      // than the tooltip moves should that the invisible rect does not trigger
+      // anymore the mouse events
+      d3.select("#toolTip-A")
+        .on("mousemove", this.handleMouseMove)
+        .on("mouseleave", this.handleMouseLeave)
+        .on("mouseover", this.handleMouseOver)
+    },
+    handleMouseMove(event, d) {
+      // Update content and position of toolTipA
+      const domElem = d3.select(this.$refs.viewA).node();
+      let [x, y] = d3.pointer(event, domElem);
+      let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
+
+      let toolTipContent = `<strong>${d.properties.name}</strong><br/>`;
+      toolTipContent += `${this.formatFeatureText(this.currentFeatureSelection)}: `
+      if (this.covidData[d.properties.iso_a3][this.currentFeatureSelection])
+        toolTipContent += `${this.covidData[d.properties.iso_a3][this.currentFeatureSelection]}`;
+      else
+        toolTipContent += null;
+
+      let tTA = d3.select("#toolTip-A")
+                  .html(`${toolTipContent}`);
+      let [tTw, tTh] = [tTA.node().clientWidth, tTA.node().clientHeight];
+
+      // Ensure that toolTip does not cross boundary of parent container
+      if (x <= oDivWidth/2 && y <= oDivHeight/2) {
+        tTA.style("left", `${x+20}px`)
+           .style("top", `${y}px`);
+      }
+      if (x > oDivWidth/2 && y > oDivHeight/2) {
+        tTA.style("left", `${x-tTw-20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x < oDivWidth/2 && y > oDivHeight/2) {
+        tTA.style("left", `${x+20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x > oDivWidth/2 && y < oDivHeight/2) {
+        tTA.style("left", `${x-tTw-20}px`)
+           .style("top", `${y}px`);
+      }
+    },
+    handleMouseLeave() {
+      d3.select("#toolTip-A")
+        .style("opacity", 0);
+    },
+    // Set up Mouse events
+    setUpMouseEvents() {
+      let worldMapCountries = d3.select(this.$refs.choroplethMap).selectAll("path");
+
+      worldMapCountries.on("mouseover", this.handleMouseOver)
+                       .on("mouseleave", this.handleMouseLeave)
+                       .on("mousemove", this.handleMouseMove);
+    },
     // Draw World Map
     createMap() {
       if (this.$refs.viewA) {
@@ -45,8 +117,6 @@ export default {
       }
       let projection = d3.geoMercator()
                          .fitSize([this.svgWidth, this.svgHeight], mapWorld);
-                         //.translate([this.svgWidth/2, this.svgHeight/1.5])
-                         //.scale((this.svgWidth-1)/2/Math.PI);
       let path_generator = d3.geoPath().projection(projection);
       let worldMap = d3.select(this.$refs.choroplethMap)
       
@@ -55,11 +125,9 @@ export default {
               .join('path')
               .attr('d', path_generator)
               .attr('id', d => d.properties.iso_a3.replaceAll(" ", "")+"_pathA")
-              //.on("click", (_, d) => this.handleStateClick(d.properties.name))
-              .style('fill', 'white')
+              .style('fill', 'lightgrey')
               .style('stroke', 'black')
-              .style('stroke-width', 0.2)
-              //.style('cursor', 'pointer')
+              .style('stroke-width', 0.2);
       
       // Enable zooming for the map
       let zoom = d3.zoom()
@@ -96,18 +164,13 @@ export default {
         d3.select("#"+country+"_pathA").style('fill', this.colorSteps[colIdx]);
       }
     },
-    // increase the intensity of the color
-    increaseColorSaturation(color, k=1.25) {
-      const {l, c, h} = d3.lch(color);
-      return d3.lch(l, c + 18 * k, h).formatHex();
-    },
-    // Deselect all selected states and therefore remove highlighting in scatterplot
-    handleEmptyAreaClick() {
-      return;
-    },
   },
   computed: {
-    
+    covidData: {
+      get() {
+        return this.$store.getters.covidData;
+      }
+    },
   },
   watch: {
     

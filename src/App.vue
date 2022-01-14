@@ -79,6 +79,18 @@ body {
   color: #2c3e50;
 }
 
+.ToolTip {
+  position: absolute;
+  z-index: 2;
+  background-color: lightgray;
+  border-radius: 5px;
+  border: 1px solid #000000;
+  font-size: calc((1.8vh + 1vw)/2);
+  font-family: Baskerville;
+  text-align: left !important;
+  text-anchor: start !important;
+}
+
 .container-fluid {
   margin: 0px !important;
   padding: 0px !important;
