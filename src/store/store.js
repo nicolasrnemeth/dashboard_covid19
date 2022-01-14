@@ -6,6 +6,7 @@ Vue.use(Vuex);
 
 const store = new Vuex.Store({
   state: {
+    extentDates: [],
     dataIsReady: false,
     covidData: [],
     dataViewA: [],
@@ -45,6 +46,25 @@ const store = new Vuex.Store({
     pageHeight: 500,
   },
   mutations: {
+    setDateRange(state) {
+      let firstIteration = true;
+      let minDate = undefined;
+      let maxDate = undefined;
+
+      for (let country of Object.values(state.covidData)) {
+        if (firstIteration) {
+          firstIteration = false;
+          [minDate, maxDate] = d3.extent(country.data, d => d3.timeParse("%Y-%m-%d")(d.date));
+          continue;
+        }
+        let [left_date, right_date] = d3.extent(country.data, d => d3.timeParse("%Y-%m-%d")(d.date));
+        if (left_date < minDate)
+          minDate = left_date;
+        if (right_date > maxDate)
+          maxDate = right_date;
+      }
+      state.extentDates = [minDate, maxDate];
+    },
     /*prepDataViewA(state, selection) {
       let _data_ = [];
       if (selection.features.length > 0) {
@@ -201,6 +221,7 @@ const store = new Vuex.Store({
     dataViewC: state => state.dataViewC,
     dataViewD: state => state.dataViewD,
     dataViewE: state => state.dataViewE,
+    extentDatesViewB: state => state.extentDates,
   },
   actions: {
     loadNPrepData(context) {
@@ -210,6 +231,8 @@ const store = new Vuex.Store({
         Object.freeze(data);
         // Parse entire dataset
         context.state.covidData = data;
+        // Set the date Range for viewB to minimum and maximum considering the entire dataset
+        context.commit("setDateRange");
         // Prepare data for intial state of each view
         context.commit("prepDataViewB", context.state.selectionB);
         context.commit("prepDataViewC", context.state.selectionC);

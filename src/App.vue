@@ -68,7 +68,6 @@ body {
 .title_ {
   font-weight: bold;
   font-family: Baskerville;
-  font-weight: bold;
   font-size: calc((2.1vh + 2.1vw)/2);
 }
 

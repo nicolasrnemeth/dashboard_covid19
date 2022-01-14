@@ -1,12 +1,10 @@
 <template>
   <div id="ViewB_" class="view-B" ref="viewB">
     <div id="mouse-line"></div>
-    <div id="toolTip-B">This is so awesome</div>
+    <div id="toolTip-B"></div>
     <div class="chart-container" ref="chartContainer">
       <div id="feature_title" class="singleDiv">
-        <span id="x_label">
-          New cases smoothed
-        </span>
+        <span id="x_label"></span>
       </div>
     </div>
   </div>
@@ -23,12 +21,12 @@ export default {
   },
   data() {
     return {
-      currentCharts: [],
+      labelXByFeature: true,
+      currentCharts: {},
       country: "",
       feature: "",
       chartData: [],
       yExtent: [],
-      xExtent: [],
       svgHeight: 100,
       svgWidth: 100,
       svgPadding: {
@@ -37,23 +35,98 @@ export default {
     }
   },
   mounted() {
-    for (let d_ of this.data_)
-      this.addNewChart(d_.country, d_.feature, d_.data);
+    this.setUpToolTipB();
+    this.addChartsAndAddXTitle();
   },
   methods: {
+    formatFeatureText(text) {
+      let formattedText = text.split("_");
+      for (let idx=0; idx < formattedText.length; idx++)
+         formattedText[idx] = formattedText[idx].charAt(0).toUpperCase() 
+                              + formattedText[idx].substring(1);
+      return formattedText;
+    },
+    addChartsAndAddXTitle() {
+      for (let d_ of this.data_)
+        this.addNewChart(d_.country, d_.feature, d_.data);
+      
+      if (this.labelXByFeature) {
+        let formattedXLabel = this.formatFeatureText(Object.values(this.currentCharts)[0].feature);
+        d3.select("#x_label").html(formattedXLabel.join(" "));
+      }
+      else
+        d3.select("#x_label").html(this.data_[0].country);
+    },
+    setUpToolTipB() {
+      // Define that toolTip does not disappear should user move mouse faster
+      // than the tooltip moves should that the invisible rect does not trigger
+      // anymore the mouse events
+      d3.select("#toolTip-B")
+        .on("mousemove", this.rectMouseMove)
+        .on("mouseleave", this.rectMouseLeave)
+        .on("mouseover", this.rectMouseOver)
+    },
     rectMouseOver() {
       d3.select("#toolTip-B")
         .style("opacity", 1);
       d3.select("#mouse-line")
-        .style("opacity", 1);
+        .style("display", "initial");
     },
     rectMouseMove(event) {
+      // Get values for content of toolTipB
+      let yValues = [];
+      let dateFormat = d3.timeFormat("%Y-%m-%d")( this.xScale.invert(d3.pointer(event)[0]) );
+      let date = d3.timeParse("%Y-%m-%d")(dateFormat);
+      for (let obj of Object.values(this.currentCharts)) {
+        let idx = d3.bisectRight(d3.map(obj.data, d => d.x), date);
+        if (idx == 0) {
+          yValues.push(null);
+          continue;
+        }
+        if (obj.data[idx-1].x == date) {
+          yValues.push(obj.data[idx-1].y);
+          continue;
+        }
+        yValues.push(obj.data[idx].y);
+      }
+      // Format and prep content for tool tip
+      let toolTipContent = "Date: " + d3.timeFormat("%d/%m/%y")(date) + "<br/><br/>";
+      let idxY = 0;
+      for (let chartObj of Object.values(this.currentCharts)) {
+        if (this.labelXByFeature) {
+          toolTipContent += `${chartObj.country}: ${yValues[idxY]}`;
+          if (idxY < yValues.length-1)
+            toolTipContent += "<br/>";
+        }
+        else {
+          toolTipContent += `${this.formatFeatureText(chartObj.feature)}:  ${yValues[idxY]}`;
+        }
+        idxY++;
+      } 
+      // Update content and position of toolTipB
       const domElem = d3.select("#ViewB_").node();
       let [x, y] = d3.pointer(event, domElem);
-      d3.select("#toolTip-B")
-        .html("{placeholder}")
-        .style("left", `${x+20}px`)
-        .style("top", `${y}px`);
+      let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
+      let tTB = d3.select("#toolTip-B")
+                  .html(`${toolTipContent}`);
+      let [tTw, tTh] = [tTB.node().clientWidth, tTB.node().clientHeight];
+      if (x <= oDivWidth/2 && y <= oDivHeight/2) {
+        tTB.style("left", `${x+20}px`)
+           .style("top", `${y}px`);
+      }
+      if (x > oDivWidth/2 && y > oDivHeight/2) {
+        tTB.style("left", `${x-tTw-20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x < oDivWidth/2 && y > oDivHeight/2) {
+        tTB.style("left", `${x+20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x > oDivWidth/2 && y < oDivHeight/2) {
+        tTB.style("left", `${x-tTw-20}px`)
+           .style("top", `${y}px`);
+      }
+
       d3.select("#mouse-line")
         .style("left", `${x}px`);
     },
@@ -61,13 +134,13 @@ export default {
       d3.select("#toolTip-B")
         .style("opacity", 0);
       d3.select("#mouse-line")
-        .style("opacity", 0);
+        .style("display", "none");
     },
     removeChart(country, feature) {
       document.getElementById(`div${country}${feature}`).remove();
-      const idx = this.currentCharts.indexOf(`${country}${feature}`);
-      if (idx > -1)
-        this.currentCharts.splice(idx, 1);
+      for (let chartID in this.currentCharts)
+        if (chartID == `${country}${feature}`)
+          delete this.currentCharts[chartID];
     },
     addNewChart(country, feature, chartData) {
       // Set info for next chart creation
@@ -104,10 +177,13 @@ export default {
 
       // Get y- and x-extent of data
       this.yExtent = d3.extent(this.chartData, d => d.y);
-      this.xExtent = d3.extent(this.chartData, d => d.x);
 
       // Add id to collection of current chart ids
-      this.currentCharts.push(`${this.country}${this.feature}`);
+      this.currentCharts[`${this.country}${this.feature}`] = {
+        country: this.country,
+        feature: this.feature,
+        data: [...this.chartData],
+      };
 
       d3.select(`#svg${this.country}${this.feature} .chart_`)
         .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
@@ -189,6 +265,11 @@ export default {
     },
   },
   computed: {
+    minmaxDateRange: {
+      get() {
+        return this.$store.getters.extentDatesViewB;
+      }
+    },
     yScale() {
       return d3.scaleLinear()
                .domain(this.yExtent)
@@ -196,7 +277,7 @@ export default {
     },
     xScale() {
       return d3.scaleTime()
-               .domain(this.xExtent)
+               .domain(this.minmaxDateRange)
                .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
     },
     data_: {
@@ -261,12 +342,13 @@ export default {
 #toolTip-B {
   position: absolute;
   z-index: 2;
-  background-color: lightgrey;
+  background-color: lightgray;
   border-radius: 5px;
   border: 1px solid #000000;
-  box-shadow: 0 0 4px black;
   font-size: calc((1.8vh + 1vw)/2);
-  position: absolute;
+  font-family: Baskerville;
+  text-align: left !important;
+  text-anchor: start !important;
 }
 
 #feature_title{
@@ -281,11 +363,12 @@ export default {
 
 #mouse-line {
   position: absolute;
-  left: 50px;
   top: 3%;
   width: 0px;
   height: 46.5%;
   border: 1px solid rgba(0,0,0,0.4);
+  z-index: 1;
+  display: none;
 }
 
 </style>
