@@ -3,6 +3,18 @@
     <div id="control-title" class="title_">
       Control Board
     </div>
+    <div id="view-A-control" class="control-panel_">
+
+    </div>
+    <div id="view-B-control" class="control-panel_">
+
+    </div>
+    <div id="view-C-control" class="control-panel_">
+
+    </div>
+    <div id="view-D-control" class="control-panel_">
+
+    </div>
   </div> 
 </template>
 
@@ -58,6 +70,26 @@ export default {
   border-radius: 5px;
   margin: 1px;
   border: 1px solid #000000;
+}
+
+#view-A-control {
+
+}
+
+#view-B-control {
+  
+}
+
+#view-C-control {
+  
+}
+
+#view-D-control {
+  
+}
+
+.control-panel_ {
+
 }
 
 </style>
