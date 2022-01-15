@@ -2,13 +2,13 @@
   <div class="view-D" ref="viewD">
     <svg id="svg-D" ref="svgD" v-show="viewBoxIsSet" preserveAspectRatio="none">
       <g class="line-chart" ref="lineChart">
-        <g class="axis axis-x" ref="xAxis"></g>
-        <g class="axis axis-y" ref="yAxis"></g>
+        <g class="axis axis-x hideAxisLine" ref="xAxis"></g>
+        <g class="axis axis-y hideAxisLine" ref="yAxis"></g>
         <g class="line-group" ref="lineGroup"></g>
         <g class="point-group" ref="pointGroup"></g>
-        <rect id="toolTip-D"></rect>
       </g>
     </svg>
+    <div id="toolTip-D" class="ToolTip"></div>
   </div>
 </template>
 
@@ -22,19 +22,33 @@ export default {
   },
   data() {
     return {
+      selectedCountries: [],
+      currentFeatureSelection: "new_deaths_smoothed_per_million",
       viewBoxIsSet: false,
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
-        top: 10, right: 15, bottom: 30, left: 45,
+        top: 5, right: 15, bottom: 36, left: 52,
       },
     }
   },
   mounted() {
+    this.setInitialSelectedCountries();
     this.createChart();
-    this.createAxesLabels();
+    this.createXAxisLabel("Date (month / year)");
+    this.createYAxisLabel(this.formatFeatureText(this.currentFeatureSelection));
   },
   methods: {
+    formatFeatureText(text) {
+      let formattedText = text.split("_");
+      for (let idx=0; idx < formattedText.length; idx++)
+         formattedText[idx] = formattedText[idx].charAt(0).toUpperCase() 
+                              + formattedText[idx].substring(1);
+      return formattedText.join(" ");
+    },
+    setInitialSelectedCountries() {
+      this.selectedCountries = this.$store.getters.initialCountriesD;
+    },
     createChart() {
       if (this.$refs.viewD) {
         this.svgWidth = this.$refs.viewD.clientWidth;
@@ -54,11 +68,12 @@ export default {
       let XAxis = d3.select(this.$refs.xAxis);
       //let tickValues = "";
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale).tickFormat(d3.timeFormat("%m-%d-%y"))/*.tickValues(tickValues)*/);
+           .call(d3.axisBottom(this.xScale).tickFormat(d3.timeFormat("%m/%y"))
+           .tickSize(3)/*.tickValues(tickValues)*/);
     },
     createYAxis() {
       let YAxis = d3.select(this.$refs.yAxis);
-      YAxis.call(d3.axisLeft(this.yScale)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
+      YAxis.call(d3.axisLeft(this.yScale).tickSize(3)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
     },
 
     createLines() {
@@ -86,28 +101,36 @@ export default {
                //.on("mouseout", lineOut)
                //.style("cursor", "pointer");
     },
-    createAxesLabels() {
+    createXAxisLabel(labelText) {
       let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
-      let translateY = this.svgHeight - this.svgPadding.top - this.svgPadding.bottom;
+      if (document.getElementById("xLabelD"))
+        document.getElementById("xLabelD").remove();
 
-      d3.select(this.$refs.yAxis)
-        .append('text')
-        .text("y-axis-label")
-        .attr('transform', 'rotate(-90)')
-        .attr('y', '-3.5em')
-        .attr('x', -0.5*translateY)
-        .style('text-anchor', 'middle')
-        .style('fill', 'black')
-        .style('font-weight', 'bold');
-    
       d3.select(this.$refs.xAxis)
         .append('text')
-        .text("x-axis-label")
+        .text(labelText)
         .attr('x', 0.5*translateX)
-        .attr('y', '2.8em')
+        .attr('y', '2.35em')
+        .attr("id", "xLabelD")
         .style('fill', 'black')
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
+    },
+    createYAxisLabel(labelText) {
+      let translateY = this.svgHeight - this.svgPadding.top - this.svgPadding.bottom;
+      if (document.getElementById("yLabelD"))
+        document.getElementById("yLabelD").remove();
+
+      d3.select(this.$refs.yAxis)
+        .append('text')
+        .text(labelText)
+        .attr('transform', 'rotate(-90)')
+        .attr('y', '-2.98em')
+        .attr('x', -0.5*translateY)
+        .attr("id", "yLabelD")
+        .style('text-anchor', 'middle')
+        .style('fill', 'black')
+        .style('font-weight', 'bold');
     },
     toTime(dateString) {
       return d3.timeParse("%Y-%m-%d")(dateString);

@@ -63,8 +63,7 @@ export default {
       // anymore the mouse events
       d3.select("#toolTip-B")
         .on("mousemove", this.rectMouseMove)
-        .on("mouseleave", this.rectMouseLeave)
-        .on("mouseover", this.rectMouseOver)
+        .on("mouseover", this.rectMouseLeave);
     },
     rectMouseOver() {
       d3.select("#toolTip-B")
@@ -90,11 +89,11 @@ export default {
         yValues.push(obj.data[idx].y);
       }
       // Format and prep content for tool tip
-      let toolTipContent = "<strong>Date: " + d3.timeFormat("%d/%m/%y")(date) + "</strong><br/>";
+      let toolTipContent = "<strong>Date: " + d3.timeFormat("%m/%d/%y")(date) + "</strong><br/>";
       let idxY = 0;
       for (let chartObj of Object.values(this.currentCharts)) {
         if (this.labelXByFeature) {
-          toolTipContent += `<strong>${chartObj.country}</strong>: ${yValues[idxY]}`;
+          toolTipContent += `${chartObj.country}: ${yValues[idxY]}`;
           if (idxY < yValues.length-1)
             toolTipContent += "<br/>";
         }

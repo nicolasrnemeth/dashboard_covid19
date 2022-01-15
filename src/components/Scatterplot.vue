@@ -2,12 +2,12 @@
   <div class="view-C" ref="viewC">
     <svg id="svg-C" ref="svgC" v-show="viewBoxIsSet" preserveAspectRatio="none">
       <g class="scatter-plot" ref="scatterPlot">
-        <g class="axis axis-x" ref="xAxis"></g>
-        <g class="axis axis-y" ref="yAxis"></g>
+        <g class="axis axis-x hideAxisLine" ref="xAxis"></g>
+        <g class="axis axis-y hideAxisLine" ref="yAxis"></g>
         <g class="points-group" ref="pointsGroup"></g>
-        <rect id="toolTip-C"></rect>
       </g>
     </svg>
+    <div id="toolTip-C" class="ToolTip"></div>
   </div>
 </template>
 
@@ -21,24 +21,205 @@ export default {
   },
   data() {
     return {
+      colorSteps: [
+        "#edf8fb", "#b2e2e2", "#66c2a4", "#2ca25f", "#006d2c"
+      ],
       viewBoxIsSet: false,
       selectedCountries: [],
       colorChannelFeature: "people_fully_vaccinated_per_hundred",
       sizeChannelFeature: "total_deaths_per_million",
+      xFeature: "gdp_per_capita",
+      yFeature: "cardiovasc_death_rate",
       svgWidth: 100,
       svgHeight: 100,
       svgPadding: {
-        top: 10, right: 5, bottom: 30, left: 45,
+        top: 5, right: 15, bottom: 36, left: 52,
       },
     }
   },
   mounted() {
+    this.setInitialSelectedCountries();
+    this.setUpToolTipCAndDiv();
     this.createChart();
     // Create axes labels only once to avoid overlaying multiple texts
     this.createAxesLabels();
     this.resizePoints();
+    this.colorPoints();
   },
   methods: {
+    formatFeatureText(text) {
+      let formattedText = text.split("_");
+      for (let idx=0; idx < formattedText.length; idx++)
+         formattedText[idx] = formattedText[idx].charAt(0).toUpperCase() 
+                              + formattedText[idx].substring(1);
+      return formattedText.join(" ");
+    },
+    setInitialSelectedCountries() {
+      this.selectedCountries = this.$store.getters.initialCountriesC;
+    },
+    // Define Mouse Events
+    setUpToolTipCAndDiv() {
+      // Define that toolTip does not disappear should user move mouse faster
+      // than the tooltip moves such that the invisible rect does not trigger
+      // anymore the mouse events
+      d3.select("#toolTip-C")
+        .on("mousemove", this.handleMouseMove)
+        .on("mouseover", (_, d) => this.handleMouseLeave(d));
+      d3.select(this.$refs.viewC)
+        .on("mousemove", this.handleMouseMoveDiv);
+    },
+    handleMouseMoveDiv(event) {
+      // Update position of toolTipC
+      const domElem = d3.select(this.$refs.viewC).node();
+      let [x, y] = d3.pointer(event, domElem);
+      let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
+      let tTC = d3.select("#toolTip-C");
+      let [tTw, tTh] = [tTC.node().clientWidth, tTC.node().clientHeight];
+
+      // Ensure that toolTip does not cross boundary of parent container
+      if (x <= oDivWidth/2 && y <= oDivHeight/2) {
+        tTC.style("left", `${x+20}px`)
+           .style("top", `${y}px`);
+      }
+      if (x > oDivWidth/2 && y > oDivHeight/2) {
+        tTC.style("left", `${x-tTw-20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x < oDivWidth/2 && y > oDivHeight/2) {
+        tTC.style("left", `${x+20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x > oDivWidth/2 && y < oDivHeight/2) {
+        tTC.style("left", `${x-tTw-20}px`)
+           .style("top", `${y}px`);
+      }
+    },
+    handleMouseLeave(d) {
+      d3.select("#toolTip-C")
+        .style("opacity", 0);
+
+      if (d) {
+        let id = d.iso_code.replaceAll(" ", "");
+        d3.select(`#${id}_point`)
+          .style("stroke-width", 0.7);
+        d3.select(`#${id}_pointlabel`)
+          .style("font-weight", "normal");
+      }
+    },
+    handleMouseMove(event, d) {
+      // Update content and position of toolTipB
+      const domElem = d3.select(this.$refs.viewC).node();
+      let [x, y] = d3.pointer(event, domElem);
+      let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
+      
+      let toolTipContent = "";
+      if (d) {
+        let foundByDate = false;
+        toolTipContent = `<strong>${this.mapIsoCodeName[d.iso_code]}</strong><br/>`;
+        // Add feature X name and value
+        toolTipContent += `${this.formatFeatureText(this.xFeature)}: `
+        if (this.xFeature in this.covidData[d.iso_code])
+          toolTipContent += `${this.covidData[d.iso_code][this.xFeature]}<br/>`;
+        else {
+          for (let idx=this.covidData[d.iso_code].data.length-1; idx >= 0; idx--) {
+            if (this.xFeature in this.covidData[d.iso_code].data[idx]) {
+              toolTipContent += `${this.covidData[d.iso_code].data[idx][this.xFeature]}<br/>`;
+              foundByDate = true;
+              break;
+            }
+          }
+          if (! foundByDate)
+            toolTipContent += `${null}</br>`;
+        }
+        
+        // Add feature Y name and value
+        foundByDate = false;
+        toolTipContent += `${this.formatFeatureText(this.yFeature)}: `
+        if (this.yFeature in this.covidData[d.iso_code])
+          toolTipContent += `${this.covidData[d.iso_code][this.yFeature]}</br>`;
+        else {
+          for (let idx=this.covidData[d.iso_code].data.length-1; idx >= 0; idx--) {
+            if (this.yFeature in this.covidData[d.iso_code].data[idx]) {
+              toolTipContent += `${this.covidData[d.iso_code].data[idx][this.yFeature]}</br>`;
+              foundByDate = true;
+              break;
+            }
+          }
+          if (! foundByDate)
+            toolTipContent += `${null}</br>`;
+        }
+
+        // Add colorChannelFeature name and value
+        foundByDate = false;
+        toolTipContent += `${this.formatFeatureText(this.colorChannelFeature)}: `
+        if (this.colorChannelFeature in this.covidData[d.iso_code])
+          toolTipContent += `${this.covidData[d.iso_code][this.colorChannelFeature]}</br>`;
+        else {
+          for (let idx=this.covidData[d.iso_code].data.length-1; idx >= 0; idx--) {
+            if (this.colorChannelFeature in this.covidData[d.iso_code].data[idx]) {
+              toolTipContent += `${this.covidData[d.iso_code].data[idx][this.colorChannelFeature]}</br>`;
+              foundByDate = true;
+              break;
+            }
+          }
+          if (! foundByDate)
+            toolTipContent += `${null}</br>`;
+        }
+
+        // Add sizeChannelFeature name and value
+        foundByDate = false;
+        toolTipContent += `${this.formatFeatureText(this.sizeChannelFeature)}: `
+        if (this.sizeChannelFeature in this.covidData[d.iso_code])
+          toolTipContent += `${this.covidData[d.iso_code][this.sizeChannelFeature]}</br>`;
+        else {
+          for (let idx=this.covidData[d.iso_code].data.length-1; idx >= 0; idx--) {
+            if (this.sizeChannelFeature in this.covidData[d.iso_code].data[idx]) {
+              toolTipContent += `${this.covidData[d.iso_code].data[idx][this.sizeChannelFeature]}</br>`;
+              foundByDate = true;
+              break;
+            }
+          }
+          if (! foundByDate)
+            toolTipContent += `${null}</br>`;
+        }  
+      }
+          
+
+      let tTC = d3.select("#toolTip-C")
+                  .html(`${toolTipContent}`);
+      let [tTw, tTh] = [tTC.node().clientWidth, tTC.node().clientHeight];
+
+      // Ensure that toolTip does not cross boundary of parent container
+      if (x <= oDivWidth/2 && y <= oDivHeight/2) {
+        tTC.style("left", `${x+20}px`)
+           .style("top", `${y}px`);
+      }
+      if (x > oDivWidth/2 && y > oDivHeight/2) {
+        tTC.style("left", `${x-tTw-20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x < oDivWidth/2 && y > oDivHeight/2) {
+        tTC.style("left", `${x+20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x > oDivWidth/2 && y < oDivHeight/2) {
+        tTC.style("left", `${x-tTw-20}px`)
+           .style("top", `${y}px`);
+      }
+    },
+    handleMouseOver(d) {
+      d3.select("#toolTip-C")
+        .style("opacity", 1);
+
+      if (d) {
+        let id = d.iso_code.replaceAll(" ", "");
+        d3.select(`#${id}_point`)
+          .style("stroke-width", 1.5);
+
+        d3.select(`#${id}_pointlabel`)
+          .style("font-weight", "bold");
+      }
+    },
     // Draw scatterplot including axes points and bivariate color scheme
     createChart() {
       if (this.$refs.viewC) {
@@ -58,11 +239,11 @@ export default {
     createXAxis() {
       let XAxis = d3.select(this.$refs.xAxis)
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale)/*.tickFormat(d => d)*/);
+           .call(d3.axisBottom(this.xScale).tickSize(3)/*.tickFormat(d => d)*/);
     },
     createYAxis() {
       let YAxis = d3.select(this.$refs.yAxis);
-      YAxis.call(d3.axisLeft(this.yScale)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
+      YAxis.call(d3.axisLeft(this.yScale).tickSize(3)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
     },
     createAxesLabels() {
       let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
@@ -70,19 +251,21 @@ export default {
 
       d3.select(this.$refs.yAxis)
         .append('text')
-        .text("y-axis-label")
+        .text(this.formatFeatureText(this.yFeature))
         .attr('transform', 'rotate(-90)')
-        .attr('y', '-3.5em')
+        .attr('y', '-2.98em')
         .attr('x', -0.5*translateY)
+        .attr("id", "xLabelC")
         .style('text-anchor', 'middle')
         .style('fill', 'black')
         .style('font-weight', 'bold');
     
       d3.select(this.$refs.xAxis)
         .append('text')
-        .text("x-axis-label")
+        .text(this.formatFeatureText(this.xFeature))
         .attr('x', 0.5*translateX)
-        .attr('y', '2.8em')
+        .attr('y', '2.35em')
+        .attr("id", "yLabelC")
         .style('fill', 'black')
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
@@ -98,6 +281,9 @@ export default {
                  .attr('cx', d => this.xScale(d.x))
                  .attr('cy', d => this.yScale(d.y))
                  .attr('r', 2)
+                 .on("mouseover", (_, d) => this.handleMouseOver(d))
+                 .on("mouseleave", (_, d) => this.handleMouseLeave(d))
+                 .on("mousemove", this.handleMouseMove)
                  .style('fill', '#00ff15')
                  .style('stroke', 'black')
                  .style('stroke-width', 0.7);
@@ -107,18 +293,84 @@ export default {
                 .enter()
                 .append("text")
                 .text(d => d.iso_code)
+                .attr("class", "points-label")
+                .attr("id", d => d.iso_code+"_pointlabel")
                 .attr("x", d => this.xScale(d.x)+7)
-                .attr("y", d => this.yScale(d.y))
-                .style("font-size", "8px")
-                .style("text-anchor", "start");
+                .on("mouseover", (_, d) => this.handleMouseOver(d))
+                .on("mouseleave", (_, d) => this.handleMouseLeave(d))
+                .on("mousemove", this.handleMouseMove)
+                .style("cursor", "default");
+
+      let elem = document.getElementsByClassName('points-label')[0];
+      let style = window.getComputedStyle(elem, null).getPropertyValue('font-size');
+      let fontSize = parseFloat(style); 
+      pointsGroup.selectAll("text")
+                 .attr("y", d => this.yScale(d.y)+fontSize/2);
     },
     // Add space between marks and plot borders
     addSpacing(minVal, maxVal, down=0.1, up=1.1) {
       return [minVal-down*maxVal, up*maxVal];
     },
+    getColorIndex(value, minVal, maxVal) {
+      let idx = Math.trunc((value - minVal) / ((maxVal - minVal)*0.2));
+      if (idx == 5)
+        return 4;
+      return idx;
+    },
     // Apply color channel
     colorPoints() {
-
+      let filtered_data = [];
+      for (let country of this.selectedCountries) {
+        if (country in this.covidData) {
+          if (this.colorChannelFeature in this.covidData[country]) {
+            filtered_data.push(this.covidData[country][this.colorChannelFeature]);
+            continue;
+          }
+          else {
+            let foundByDate = false;
+            if ("data" in this.covidData[country]) {
+              for (let idx=this.covidData[country].data.length-1; idx >= 0; idx--) {
+                if (this.colorChannelFeature in this.covidData[country].data[idx]) {
+                  foundByDate = true;
+                  filtered_data.push(this.covidData[country].data[idx][this.colorChannelFeature]);
+                  break;
+                }
+              }
+            }
+            if (foundByDate)
+              continue;
+          }
+        }
+        filtered_data.push(undefined);
+      }
+      let [minVal, maxVal] = d3.extent(filtered_data);
+      
+      let colIdx = undefined;
+      for (let country of this.selectedCountries) {
+        if (country in this.covidData) {
+          if (this.colorChannelFeature in this.covidData[country]) {
+            let colVal = this.covidData[country][this.colorChannelFeature];
+            colIdx = this.getColorIndex(colVal, minVal, maxVal);
+            d3.select("#"+country+"_point").style('fill', this.colorSteps[colIdx]);
+            continue;
+          }
+          if ("data" in this.covidData[country]) {
+            let foundByDate = false;
+            for (let idx_=this.covidData[country].data.length-1; idx_ >= 0; idx_--) {
+              if (this.colorChannelFeature in this.covidData[country].data[idx_]) {
+                foundByDate = true;
+                let colVal = this.covidData[country].data[idx_][this.colorChannelFeature];
+                colIdx = this.getColorIndex(colVal, minVal, maxVal);
+                d3.select("#"+country+"_point").style('fill', this.colorSteps[colIdx]);
+                break;
+              }
+            }
+            if (foundByDate)
+              continue;
+          }
+        }
+        d3.select("#"+country+"_point").style('fill', "#cccccc");
+      }
     },
     // Apply size channel
     resizePoints() {
@@ -148,6 +400,11 @@ export default {
     },
   },
   computed: {
+    mapIsoCodeName: {
+      get() {
+        return this.$store.getters.mapIsoCodeName;
+      }
+    },
     covidData: {
       get() {
         return this.$store.getters.covidData;
@@ -191,6 +448,7 @@ export default {
   border-radius: 5px;
   box-shadow: 0 0 4px black;
   margin: 1px;
+  font-size: calc((1.4vh + 0.8vw)/2);
 }
 
 #svg-C {
@@ -199,6 +457,12 @@ export default {
   top: 0;
   width: 100%;
   height: 100%;
+}
+
+.points-label {
+  text-anchor: start;
+  font-family: Baskerville;
+  font-size: 11px;
 }
 
 </style>

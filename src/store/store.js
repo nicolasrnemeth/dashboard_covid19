@@ -2,10 +2,13 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import * as d3 from 'd3';
 
+import mapWorld from '@/assets/world-geo.json';
+
 Vue.use(Vuex);
 
 const store = new Vuex.Store({
   state: {
+    mapIsoCodeName: {},
     extentDates: [],
     dataIsReady: false,
     covidData: [],
@@ -19,23 +22,18 @@ const store = new Vuex.Store({
       features: ["human_development_index"],
     },
     selectionB: {
-      x: [],
       ys: ["AUT", "DEU", "FRA", "IRL"],
       country: false,
-      feature: "new_cases_smoothed",
+      feature: "new_cases_smoothed_per_million",
     },
     selectionC: {
-      dateRange: [],
       x: "gdp_per_capita",
       y: "cardiovasc_death_rate",
-      countries: [],
-      continent: "Europe",
+      countries: ["AUT", "DEU", "FRA", "IRL"],
     },
     selectionD: {
-      x: [],
-      y: "people_fully_vaccinated",
-      countries: [],
-      continent: "Europe",
+      y: "new_deaths_smoothed_per_million",
+      countries: ["AUT", "DEU", "FRA", "IRL"],
     },
     selectionE: {
 
@@ -63,25 +61,8 @@ const store = new Vuex.Store({
       }
       state.extentDates = [minDate, maxDate];
     },
-    /*prepDataViewA(state, selection) {
-      let _data_ = [];
-      if (selection.features.length > 0) {
-        for (let elem of Object.values(state.covidData)) {
-          if (selection.features.length == 1) {
-            _data_.push({
-
-            })
-          }
-        }
-        state.dataViewA = _data_;
-      }
-    },*/
     prepDataViewB(state, selection) {
       //let nullIDs = [];
-      if (selection.x.length == 2) {
-        var left_date = d3.timeParse("%Y-%m-%d")(selection.x[0]);
-        var right_date = d3.timeParse("%Y-%m-%d")(selection.x[1]);
-      }
       let check = true;
       state.dataViewB = [];
       
@@ -101,10 +82,7 @@ const store = new Vuex.Store({
             if (day[selection.feature] == undefined) continue;
             let date = d3.timeParse("%Y-%m-%d")(day.date);
             if (!date) continue;
-            if (selection.x.length == 2) {
-              if (date < left_date) continue;
-              if (date > right_date) break;
-            }
+  
             obj.data.push({
               x: date,
               y: day[selection.feature],
@@ -124,10 +102,7 @@ const store = new Vuex.Store({
         for (let day of state.covidData[selection.country]) {
           let date = d3.timeParse("%Y-%m-%d")(day.date);
           if (!date) continue;
-          if (selection.x.length == 2) {
-            if (date < left_date) continue;
-            if (date > right_date) break;
-          }
+
           let idx = 0;
           for (let feature of selection.ys) {
             if (day[feature] == undefined) continue;
@@ -144,13 +119,7 @@ const store = new Vuex.Store({
       let nullIDs = [];
       let _data_ = [];
       
-      for (let country in state.covidData) {
-        // Filter by continent if continent is specified
-        if (selection.continent != "" && state.covidData[country].continent != selection.continent)
-          continue;
-        // Filter by countries if continent not specified
-        if (selection.continent == "" && !(country in selection.countries))
-          continue;
+      for (let country of selection.countries) {
         // Track and omit null values
         if (state.covidData[country][selection.x] == undefined ||
             state.covidData[country][selection.y] == undefined) {
@@ -168,21 +137,8 @@ const store = new Vuex.Store({
     },
     prepDataViewD(state, selection) {
       //let nullIDs = [];
-      let count = 0;
-      if (selection.x.length == 2) {
-        var left_date = d3.timeParse("%Y-%m-%d")(selection.x[0]);
-        var right_date = d3.timeParse("%Y-%m-%d")(selection.x[1]);
-      }
       let _data_ = [];
-      for (let country in state.covidData) {
-        if (count == 10) break;
-        // Filter by continent if continent is specified
-        if (selection.continent != "" && state.covidData[country].continent != selection.continent)
-          continue;
-        // Filter by countries if continent not specified
-        if (selection.continent == "" && !(country in selection.countries))
-          continue;
-  
+      for (let country of selection.countries) 
         for (let day of state.covidData[country].data) {
           // Track and omit null values
           if (day[selection.y] == undefined) {
@@ -192,24 +148,25 @@ const store = new Vuex.Store({
           let date = d3.timeParse("%Y-%m-%d")(day.date);
           // Continue or break respectively when out of the input date range
           if (! date) continue;
-          if (selection.x.length == 2) {
-            if (date < left_date) continue;
-            if (date > right_date) break;
-          }
+
           _data_.push({
             iso_code: country,
             x: date,
             y: day[selection.y],
           });
         }
-        count++;
-      }
       // Set the state of view D
       state.dataViewD = _data_;
     },
     /*prepDataViewE(state, selection) {
 
     },*/
+    setUpMapIsoCodeName(state) {
+      for (let feature of mapWorld.features) {
+        if ("iso_a3" in feature.properties && "name" in feature.properties)
+          state.mapIsoCodeName[feature.properties.iso_a3] = feature.properties.name;
+      }
+    }
   },
   getters: {
     dataViewA: state => state.dataViewA,
@@ -219,6 +176,9 @@ const store = new Vuex.Store({
     dataViewE: state => state.dataViewE,
     extentDatesViewB: state => state.extentDates,
     covidData: state => state.covidData,
+    mapIsoCodeName: state => state.mapIsoCodeName,
+    initialCountriesC: state => state.selectionC.countries,
+    initialCountriesD: state => state.selectionD.countries,
   },
   actions: {
     loadNPrepData(context) {
@@ -228,6 +188,8 @@ const store = new Vuex.Store({
         Object.freeze(data);
         // Parse entire dataset
         context.state.covidData = data;
+        // Set up map between Iso code and full country name
+        context.commit("setUpMapIsoCodeName");
         // Set the date Range for viewB to minimum and maximum considering the entire dataset
         context.commit("setDateRange");
         // Prepare data for intial state of each view

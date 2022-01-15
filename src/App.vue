@@ -89,6 +89,7 @@ body {
   font-family: Baskerville;
   text-align: left !important;
   text-anchor: start !important;
+  opacity: 0;
 }
 
 .container-fluid {
@@ -135,6 +136,15 @@ body {
   border-radius: 5px;
   margin: 1px 1px 0px 1px;
   border: 1px solid #000000;
+}
+
+.axis {
+  font-family: Baskerville;
+  font-size: 13px;
+}
+
+.hideAxisLine .domain {
+  stroke-width: 0px;
 }
 
 </style>

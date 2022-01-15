@@ -32,7 +32,7 @@ export default {
   },
   mounted() {
     this.createMap();
-    this.colorCountries(this.currentFeatureSelection);
+    this.colorCountries();
     this.setUpMouseEvents();
     this.setUpToolTipAAndDiv();
   },
@@ -46,9 +46,14 @@ export default {
       return formattedText.join(" ");
     },
     // Define Mouse functions
-    handleMouseOver() {
+    handleMouseOver(d) {
       d3.select("#toolTip-A")
         .style("opacity", 1);
+      
+      if (d) {
+        d3.select(`#${d.properties.iso_a3.replaceAll(" ", "")}_pathA`)
+          .style("stroke-width", 0.7);
+      }
     },
     setUpToolTipAAndDiv() {
       // Define that toolTip does not disappear should user move mouse faster
@@ -56,13 +61,12 @@ export default {
       // anymore the mouse events
       d3.select("#toolTip-A")
         .on("mousemove", this.handleMouseMove)
-        .on("mouseleave", this.handleMouseLeave)
-        .on("mouseover", this.handleMouseOver)
+        .on("mouseover", (_, d) => this.handleMouseLeave(d));
       d3.select(this.$refs.viewA)
-        .on("mousemove", this.handleMouseMoveDiv)
+        .on("mousemove", this.handleMouseMoveDiv);
     },
     handleMouseMoveDiv(event) {
-      // Update content and position of toolTipA
+      // Update position of toolTipA
       const domElem = d3.select(this.$refs.viewA).node();
       let [x, y] = d3.pointer(event, domElem);
       let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
@@ -125,16 +129,21 @@ export default {
            .style("top", `${y}px`);
       }
     },
-    handleMouseLeave() {
+    handleMouseLeave(d) {
       d3.select("#toolTip-A")
         .style("opacity", 0);
+
+      if (d) {
+        d3.select(`#${d.properties.iso_a3.replaceAll(" ", "")}_pathA`)
+          .style("stroke-width", 0.2);
+      }
     },
     // Set up Mouse events
     setUpMouseEvents() {
       let worldMapCountries = d3.select(this.$refs.choroplethMap).selectAll("path");
 
-      worldMapCountries.on("mouseover", this.handleMouseOver)
-                       .on("mouseleave", this.handleMouseLeave)
+      worldMapCountries.on("mouseover", (_, d) => this.handleMouseOver(d))
+                       .on("mouseleave", (_, d) => this.handleMouseLeave(d))
                        .on("mousemove", this.handleMouseMove);
     },
     // Draw World Map
@@ -177,22 +186,45 @@ export default {
       return idx;
     },
     // Add color scheme to states based on selected bivariate color scheme
-    colorCountries(selection) {
+    colorCountries() {
       let filtered_data = [];
-      for (let country of Object.keys(this.$store.state.covidData))
-        if (country.length == 3) 
-          filtered_data.push(this.$store.state.covidData[country][selection]);
+      for (let country in this.covidData)
+        if (country.length == 3) {
+          if (this.currentFeatureSelection in this.covidData[country]) {
+            filtered_data.push(this.covidData[country][this.currentFeatureSelection]);
+          }
+          else {
+            for (let idx_ = this.covidData[country].data.length-1; idx_ >= 0; idx_--) {
+              if (this.currentFeatureSelection in this.covidData[country].data[idx_])
+                filtered_data.push(this.covidData[country].data[idx_][this.currentFeatureSelection]);
+                break;
+            }
+          }
+        }
 
       let [minVal, maxVal] = d3.extent(filtered_data);
 
-      for (let country of Object.keys(this.$store.state.covidData)) {
+      for (let country in this.covidData) {
         if (country.length != 3) continue;
-        if (!(selection in this.$store.state.covidData[country]) || this.$store.state.covidData[country] == undefined) {
-          d3.select("#"+country+"_pathA").style('fill', "#cccccc");
+        if (this.currentFeatureSelection in this.covidData[country]) {
+          let colIdx = this.getColorIndex(this.covidData[country][this.currentFeatureSelection], minVal, maxVal);
+          d3.select("#"+country+"_pathA").style("fill", this.colorSteps[colIdx]);
           continue;
         }
-        let colIdx = this.getColorIndex(this.$store.state.covidData[country][selection], minVal, maxVal);
-        d3.select("#"+country+"_pathA").style('fill', this.colorSteps[colIdx]);
+        else {
+          let foundByDate = false;
+          for (let idx_=this.covidData[country].data.length-1; idx_ >= 0; idx_--) {
+            if (this.currentFeatureSelection in this.covidData[country].data[idx_]) {
+              foundByDate = true;
+              let colIdx = this.getColorIndex(this.covidData[country].data[idx_][this.currentFeatureSelection], minVal, maxVal);
+              d3.select("#"+country+"_pathA").style("fill", this.colorSteps[colIdx]);
+              break;
+            }
+          }
+          if (foundByDate)
+            continue;
+        }
+        d3.select("#"+country+"_pathA").style('fill', "#cccccc");
       }
     },
   },
