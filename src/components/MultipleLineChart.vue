@@ -52,10 +52,10 @@ export default {
       
       if (this.labelXByFeature) {
         let formattedXLabel = this.formatFeatureText(Object.values(this.currentCharts)[0].feature);
-        d3.select("#x_label").html(formattedXLabel);
+        this.createXAxisLabel(formattedXLabel);
       }
       else
-        d3.select("#x_label").html(this.data_[0].country);
+        this.createXAxisLabel(Object.values(this.currentCharts)[0].country);
     },
     setUpToolTipB() {
       // Define that toolTip does not disappear should user move mouse faster
@@ -250,16 +250,9 @@ export default {
         .append('text')
         .text(label);
     },
-    createXAxisLabel(label, x, y) {
-      d3.select(`div${this.country}${this.feature}`)
-        .append('text')
-        .text(label)
-        .attr("class", "xLabel")
-        .attr('y', y)
-        .attr('x', x)
-        .style('text-anchor', 'middle')
-        .style('fill', 'black')
-        .style('font-weight', 'bold');
+    createXAxisLabel(labelText) {
+      d3.select(`#x_label`)
+        .html(`${labelText}`);
     },
     toTime(dateString) {
       return d3.timeParse("%Y-%m-%d")(dateString);

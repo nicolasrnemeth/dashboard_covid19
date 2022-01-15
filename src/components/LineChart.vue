@@ -4,8 +4,8 @@
       <g class="line-chart" ref="lineChart">
         <g class="axis axis-x hideAxisLine" ref="xAxis"></g>
         <g class="axis axis-y hideAxisLine" ref="yAxis"></g>
+        <rect id="mousearea_viewD"></rect>
         <g class="line-group" ref="lineGroup"></g>
-        <g class="point-group" ref="pointGroup"></g>
       </g>
     </svg>
     <div id="toolTip-D" class="ToolTip"></div>
@@ -22,7 +22,12 @@ export default {
   },
   data() {
     return {
+      colorPalette: [
+        "#1f78b4", "#33a02c", "#e31a1c", "#ff7f00", "#6a3d9a", "#b15928",
+        "#a6cee3", "#b2df8a", "#fb9a99", "#fdbf6f", "#cab2d6", "#ffff99"
+      ],
       selectedCountries: [],
+      mapCountryColorIdx: {},
       currentFeatureSelection: "new_deaths_smoothed_per_million",
       viewBoxIsSet: false,
       svgWidth: 100,
@@ -33,12 +38,16 @@ export default {
     }
   },
   mounted() {
+    this.setUpToolTipAndDiv();
     this.setInitialSelectedCountries();
     this.createChart();
     this.createXAxisLabel("Date (month / year)");
     this.createYAxisLabel(this.formatFeatureText(this.currentFeatureSelection));
   },
   methods: {
+    setUpToolTipAndDiv() {
+
+    },
     formatFeatureText(text) {
       let formattedText = text.split("_");
       for (let idx=0; idx < formattedText.length; idx++)
@@ -60,6 +69,13 @@ export default {
 
       d3.select(this.$refs.lineChart)
         .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
+      d3.select("#mousearea_viewD")
+        .attr("width", this.svgWidth-this.svgPadding.left-this.svgPadding.right)
+        .attr("height", this.svgHeight-this.svgPadding.top-this.svgPadding.bottom)
+        .on("click", this.handleChartClick)
+        .style("fill", "white")
+        .style("opacity", 0);
+
       this.createXAxis();
       this.createYAxis();
       this.createLines();
@@ -75,31 +91,71 @@ export default {
       let YAxis = d3.select(this.$refs.yAxis);
       YAxis.call(d3.axisLeft(this.yScale).tickSize(3)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
     },
+    handleMouseOver(d) {
+      if (d3.selectAll(".alreadyClicked").empty())
+        d3.selectAll(`.linesD:not(#${d[0]}_lineD)`).style("stroke", "grey").style("opacity", 0.4);
+      else {
+        if (! document.getElementById(`${d[0]}_lineD`).classList.contains("alreadyClicked"))
+          d3.select(`#${d[0]}_lineD`).style("stroke", this.colorPalette[this.mapCountryColorIdx[d[0]]])
+                                     .style("opacity", 1);
+      }
+    },
+    handleMouseLeave(d) {
+      if (d3.selectAll(".alreadyClicked").empty())
+        d3.selectAll(`.linesD`).style("stroke", d => this.colorPalette[this.mapCountryColorIdx[d[0]]]).style("opacity", 1);
+      else {
+        if (! document.getElementById(`${d[0]}_lineD`).classList.contains("alreadyClicked"))
+          d3.select(`#${d[0]}_lineD`).style("stroke", "grey").style("opacity", 0.4);
+      }
+    },
+    handleMouseMove(event, d) {
+      event;d;
+    },
+    handleLineClick(d) {
+      if (d3.selectAll(".alreadyClicked").empty())
+        d3.selectAll(`.linesD:not(#${d[0]}_lineD)`).style("stroke", "grey").style("opacity", 0.4);
+      
+      d3.select(`#${d[0]}_lineD`).classed("alreadyClicked", true);
 
+      if (d3.selectAll(".alreadyClicked").size() == this.selectedCountries.length)
+        d3.selectAll(".alreadyClicked").classed("alreadyClicked", false);
+      else {
+        d3.select(`#${d[0]}_lineD`).style("stroke", this.colorPalette[this.mapCountryColorIdx[d[0]]]).style("opacity", 1);
+      }
+    },
+    handleChartClick() {
+      d3.selectAll(".linesD")
+        .style("stroke", d => this.colorPalette[this.mapCountryColorIdx[d[0]]])
+        .style("opacity", 1);
+      d3.selectAll(".alreadyClicked").classed("alreadyClicked", false);
+    },
     createLines() {
       // Group entries by iso_code
       let grouped_data = d3.group(this.data_, d => d.iso_code);
 
       // Specify line
-      let line = d3.line().x(d => this.xScale(d.x)).y(d => this.yScale(d.y));
-   
+      let line = d3.line().curve(d3.curveBasis).x(d => this.xScale(d.x)).y(d => this.yScale(d.y));
       // Plot lines
       const lineGroup = d3.select(this.$refs.lineGroup)
+
+      for (let colIdx=0; colIdx < this.selectedCountries.length; colIdx++)
+        this.mapCountryColorIdx[this.selectedCountries[colIdx].slice()] = colIdx;
  
       lineGroup.selectAll("lines")
                .data(grouped_data)
                .enter()
                .append("path")
-               //.attr("class", "lines")
+               .attr("id", d => `${d[0]}_lineD`)
+               .attr("class", "linesD")
                .attr("d", (d) => line(d[1]))
+               .on("click", (_, d) => this.handleLineClick(d))
+               .on("mousemove", this.handleMouseMove)
+               .on("mouseover", (_, d) => this.handleMouseOver(d))
+               .on("mouseleave", (_, d) => this.handleMouseLeave(d))
                .style("fill", "none")
-               .style("stroke", "blue")
-               .style("stroke-width", 1.5)
-               //.attr("transform", "translate(0,10)")
-               //.on("click", lineClick)
-               //.on("mouseover", lineOver)
-               //.on("mouseout", lineOut)
-               //.style("cursor", "pointer");
+               .style("stroke", d => this.colorPalette[this.mapCountryColorIdx[d[0]]])
+               .style("stroke-width", 1.8)
+               .style("cursor", "pointer");
     },
     createXAxisLabel(labelText) {
       let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
@@ -138,7 +194,7 @@ export default {
     dataExtent(feature) {
       return d3.extent(this.data_, d => d[feature]);
     },
-    addSpacing(minVal, maxVal, down=0.02, up=1.02) {
+    addSpacing(minVal, maxVal, down=0.02, up=1.07) {
       return [minVal-down*maxVal, up*maxVal];
     }
   },

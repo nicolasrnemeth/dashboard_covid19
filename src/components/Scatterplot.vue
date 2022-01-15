@@ -4,6 +4,7 @@
       <g class="scatter-plot" ref="scatterPlot">
         <g class="axis axis-x hideAxisLine" ref="xAxis"></g>
         <g class="axis axis-y hideAxisLine" ref="yAxis"></g>
+        <rect id="mousearea_viewC"></rect>
         <g class="points-group" ref="pointsGroup"></g>
       </g>
     </svg>
@@ -41,8 +42,8 @@ export default {
     this.setInitialSelectedCountries();
     this.setUpToolTipCAndDiv();
     this.createChart();
-    // Create axes labels only once to avoid overlaying multiple texts
-    this.createAxesLabels();
+    this.createXAxisLabel(this.formatFeatureText(this.xFeature));
+    this.createYAxisLabel(this.formatFeatureText(this.yFeature));
     this.resizePoints();
     this.colorPoints();
   },
@@ -99,10 +100,11 @@ export default {
         .style("opacity", 0);
 
       if (d) {
-        let id = d.iso_code.replaceAll(" ", "");
-        d3.select(`#${id}_point`)
+        d3.selectAll(`.pointsC`)
+          .style("opacity", 1)
           .style("stroke-width", 0.7);
-        d3.select(`#${id}_pointlabel`)
+        d3.selectAll(`.points-labelC`)
+          .style("opacity", 1)
           .style("font-weight", "normal");
       }
     },
@@ -213,9 +215,13 @@ export default {
 
       if (d) {
         let id = d.iso_code.replaceAll(" ", "");
+        d3.selectAll(`.pointsC:not(#${id}_point)`)
+          .style("opacity", 0.4);
+        d3.selectAll(`.points-labelC:not(#${id}_pointlabel)`)
+          .style("opacity", 0.4)
+
         d3.select(`#${id}_point`)
           .style("stroke-width", 1.5);
-
         d3.select(`#${id}_pointlabel`)
           .style("font-weight", "bold");
       }
@@ -232,6 +238,13 @@ export default {
 
       d3.select(this.$refs.scatterPlot)
         .attr("transform", `translate(${this.svgPadding.left}, ${this.svgPadding.top})`);
+       d3.select("#mousearea_viewC")
+        .attr("width", this.svgWidth-this.svgPadding.left-this.svgPadding.right)
+        .attr("height", this.svgHeight-this.svgPadding.top-this.svgPadding.bottom)
+        .on("click", this.handleChartClick)
+        .style("fill", "white")
+        .style("opacity", 0);
+      
       this.createXAxis();
       this.createYAxis();
       this.createPoints();
@@ -245,30 +258,32 @@ export default {
       let YAxis = d3.select(this.$refs.yAxis);
       YAxis.call(d3.axisLeft(this.yScale).tickSize(3)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
     },
-    createAxesLabels() {
+    createXAxisLabel(labelText) {
       let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
+
+      d3.select(this.$refs.xAxis)
+        .append('text')
+        .text(labelText)
+        .attr('x', 0.5*translateX)
+        .attr('y', '2.35em')
+        .attr("id", "xLabelC")
+        .style('fill', 'black')
+        .style('text-anchor', 'middle')
+        .style('font-weight', 'bold')
+    },
+    createYAxisLabel(labelText) {
       let translateY = this.svgHeight - this.svgPadding.top - this.svgPadding.bottom;
 
       d3.select(this.$refs.yAxis)
         .append('text')
-        .text(this.formatFeatureText(this.yFeature))
+        .text(labelText)
         .attr('transform', 'rotate(-90)')
         .attr('y', '-2.98em')
         .attr('x', -0.5*translateY)
-        .attr("id", "xLabelC")
+        .attr("id", "yLabelC")
         .style('text-anchor', 'middle')
         .style('fill', 'black')
         .style('font-weight', 'bold');
-    
-      d3.select(this.$refs.xAxis)
-        .append('text')
-        .text(this.formatFeatureText(this.xFeature))
-        .attr('x', 0.5*translateX)
-        .attr('y', '2.35em')
-        .attr("id", "yLabelC")
-        .style('fill', 'black')
-        .style('text-anchor', 'middle')
-        .style('font-weight', 'bold')
     },
     createPoints() {
       const pointsGroup = d3.select(this.$refs.pointsGroup);
@@ -276,7 +291,7 @@ export default {
       pointsGroup.selectAll('.points')
                  .data(this.data_)
                  .join('circle')
-                 .attr('class', 'points')
+                 .attr('class', 'pointsC')
                  .attr('id', d => d.iso_code.replaceAll(" ", "")+"_point")
                  .attr('cx', d => this.xScale(d.x))
                  .attr('cy', d => this.yScale(d.y))
@@ -284,6 +299,7 @@ export default {
                  .on("mouseover", (_, d) => this.handleMouseOver(d))
                  .on("mouseleave", (_, d) => this.handleMouseLeave(d))
                  .on("mousemove", this.handleMouseMove)
+                 .on("click", (_, d) => this.handlePointClick(d))
                  .style('fill', '#00ff15')
                  .style('stroke', 'black')
                  .style('stroke-width', 0.7);
@@ -293,15 +309,16 @@ export default {
                 .enter()
                 .append("text")
                 .text(d => d.iso_code)
-                .attr("class", "points-label")
+                .attr("class", "points-labelC")
                 .attr("id", d => d.iso_code+"_pointlabel")
                 .attr("x", d => this.xScale(d.x)+7)
                 .on("mouseover", (_, d) => this.handleMouseOver(d))
                 .on("mouseleave", (_, d) => this.handleMouseLeave(d))
+                .on("click", this.handlePointClick)
                 .on("mousemove", this.handleMouseMove)
                 .style("cursor", "default");
 
-      let elem = document.getElementsByClassName('points-label')[0];
+      let elem = document.getElementsByClassName('points-labelC')[0];
       let style = window.getComputedStyle(elem, null).getPropertyValue('font-size');
       let fontSize = parseFloat(style); 
       pointsGroup.selectAll("text")
@@ -459,7 +476,7 @@ export default {
   height: 100%;
 }
 
-.points-label {
+.points-labelC {
   text-anchor: start;
   font-family: Baskerville;
   font-size: 11px;
