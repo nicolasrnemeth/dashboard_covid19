@@ -23,6 +23,7 @@ export default {
     return {
       labelXByFeature: true,
       currentCharts: {},
+      data_: [],
       country: "",
       feature: "",
       chartData: [],
@@ -35,10 +36,14 @@ export default {
     }
   },
   mounted() {
+    this.setInitialData();
     this.setUpToolTipB();
     this.addChartsAndAddXTitle();
   },
   methods: {
+    setInitialData() {
+      this.data_ = this.initialData;
+    },
     formatFeatureText(text) {
       let formattedText = text.split("_");
       for (let idx=0; idx < formattedText.length; idx++)
@@ -274,7 +279,7 @@ export default {
                .domain(this.minmaxDateRange)
                .range([0, this.svgWidth - this.svgPadding.left - this.svgPadding.right]);
     },
-    data_: {
+    initialData: {
       get() {
         return this.$store.getters.dataViewB;
       }

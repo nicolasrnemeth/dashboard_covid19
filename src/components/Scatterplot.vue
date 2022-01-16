@@ -25,6 +25,7 @@ export default {
       colorSteps: [
         "#edf8fb", "#b2e2e2", "#66c2a4", "#2ca25f", "#006d2c"
       ],
+      data_: [],
       viewBoxIsSet: false,
       selectedCountries: [],
       colorChannelFeature: "people_fully_vaccinated_per_hundred",
@@ -39,6 +40,7 @@ export default {
     }
   },
   mounted() {
+    this.setInitialData();
     this.setInitialSelectedCountries();
     this.setUpToolTipCAndDiv();
     this.createChart();
@@ -48,6 +50,9 @@ export default {
     this.colorPoints();
   },
   methods: {
+    setInitialData() {
+      this.data_ = this.initialData;
+    },
     formatFeatureText(text) {
       let formattedText = text.split("_");
       for (let idx=0; idx < formattedText.length; idx++)
@@ -427,7 +432,7 @@ export default {
         return this.$store.getters.covidData;
       }
     },
-    data_: {
+    initialData: {
       get() {
         return this.$store.getters.dataViewC;
       }

@@ -26,6 +26,7 @@ export default {
         "#1f78b4", "#33a02c", "#e31a1c", "#ff7f00", "#6a3d9a", "#b15928",
         "#a6cee3", "#b2df8a", "#fb9a99", "#fdbf6f", "#cab2d6", "#ffff99"
       ],
+      data_: [],
       selectedCountries: [],
       mapCountryColorIdx: {},
       currentFeatureSelection: "new_deaths_smoothed_per_million",
@@ -38,15 +39,24 @@ export default {
     }
   },
   mounted() {
-    this.setUpToolTipAndDiv();
+    this.setInitialData();
+    this.setUpToolTipD();
     this.setInitialSelectedCountries();
     this.createChart();
     this.createXAxisLabel("Date (month / year)");
     this.createYAxisLabel(this.formatFeatureText(this.currentFeatureSelection));
   },
   methods: {
-    setUpToolTipAndDiv() {
-
+    setInitialData() {
+      this.data_ = this.initialData;
+    },
+    setUpToolTipD() {
+      // Define that toolTip does not disappear should user move mouse faster
+      // than the tooltip moves such that the invisible rect does not trigger
+      // anymore the mouse events
+      d3.select("#toolTip-D")
+        .on("mousemove", this.handleMouseMove)
+        .on("mouseover", (_, d) => this.handleMouseLeave(d));
     },
     formatFeatureText(text) {
       let formattedText = text.split("_");
@@ -73,6 +83,9 @@ export default {
         .attr("width", this.svgWidth-this.svgPadding.left-this.svgPadding.right)
         .attr("height", this.svgHeight-this.svgPadding.top-this.svgPadding.bottom)
         .on("click", this.handleChartClick)
+        .on("mousemove", this.handleMouseMove)
+        .on("mouseover", this.handleRectOver)
+        .on("mouseleave", this.handleRectLeave)
         .style("fill", "white")
         .style("opacity", 0);
 
@@ -92,6 +105,8 @@ export default {
       YAxis.call(d3.axisLeft(this.yScale).tickSize(3)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
     },
     handleMouseOver(d) {
+      d3.select("#toolTip-D").style("opacity", 1);
+
       if (d3.selectAll(".alreadyClicked").empty())
         d3.selectAll(`.linesD:not(#${d[0]}_lineD)`).style("stroke", "grey").style("opacity", 0.4);
       else {
@@ -100,16 +115,96 @@ export default {
                                      .style("opacity", 1);
       }
     },
+    handleRectOver() {
+      d3.select("#toolTip-D").style("opacity", 1);
+    },
+    handleRectLeave() {
+      d3.select("#toolTip-D").style("opacity", 0);
+    },
     handleMouseLeave(d) {
-      if (d3.selectAll(".alreadyClicked").empty())
-        d3.selectAll(`.linesD`).style("stroke", d => this.colorPalette[this.mapCountryColorIdx[d[0]]]).style("opacity", 1);
-      else {
-        if (! document.getElementById(`${d[0]}_lineD`).classList.contains("alreadyClicked"))
-          d3.select(`#${d[0]}_lineD`).style("stroke", "grey").style("opacity", 0.4);
+      d3.select("#toolTip-D").style("opacity", 0);
+      if (d) {
+        if (d3.selectAll(".alreadyClicked").empty())
+          d3.selectAll(`.linesD`).style("stroke", d => this.colorPalette[this.mapCountryColorIdx[d[0]]]).style("opacity", 1);
+        else {
+          if (! document.getElementById(`${d[0]}_lineD`).classList.contains("alreadyClicked"))
+            d3.select(`#${d[0]}_lineD`).style("stroke", "grey").style("opacity", 0.4);
+        }
       }
     },
-    handleMouseMove(event, d) {
-      event;d;
+    handleMouseMove(event) {
+      // Get values for content of toolTipC
+      const domElem = d3.select(this.$refs.viewD).node();
+      let [x, y] = d3.pointer(event, domElem);
+      let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
+
+      let yValues = {};
+      let currentFeature = this.currentFeatureSelection;
+      let dateFormat = d3.timeFormat("%Y-%m-%d")( this.xScale.invert(d3.pointer(event)[0]) );
+      let date = d3.timeParse("%Y-%m-%d")(dateFormat);
+      for (let country of this.selectedCountries) {
+        let currentData = d3.map(this.covidData[country].data, function(d) {
+          return ({
+            date: d3.timeParse("%Y-%m-%d")(d.date),
+            feature: d[currentFeature],
+          });
+        }).filter(d => d.feature != undefined);
+        let idx = d3.bisectRight(d3.map(currentData, d => d.date), date);
+        if (idx == 0) {
+          yValues[country] = null;
+          continue;
+        }
+        if (currentData[idx-1].date == date) {
+          yValues[country] = currentData[idx-1].feature;
+          continue;
+        }
+        yValues[country] = currentData[idx].feature;
+      }
+      // Format and prep content for tool tip
+      let toolTipContent = "<strong>Date: " + d3.timeFormat("%m/%d/%y")(date) + "</strong><br/>";
+      let idx__ = 1;
+      for (let country of this.selectedCountries) {
+        if (d3.selectAll(".alreadyClicked").empty()) {
+          toolTipContent += `<span style="color:${this.colorPalette[this.mapCountryColorIdx[country]]}">${country}</span>: ${yValues[country]}`;
+          if (idx__ % 2 == 0 || (idx__ == this.selectedCountries.length && idx__ != 2))
+            toolTipContent += "<br/>";
+          else 
+            toolTipContent += `<span style="color: lightgray">__</span>`;
+        }
+        else {
+          if (document.getElementById(`${country}_lineD`).classList.contains("alreadyClicked")) {
+            toolTipContent += `<span style="color:${this.colorPalette[this.mapCountryColorIdx[country]]}">${country}</span>: ${yValues[country]}`;
+            if (idx__ % 2 == 0 || (idx__ == this.selectedCountries.length && idx__ != 2))
+              toolTipContent += "<br/>";
+            else 
+              toolTipContent += `<span style="color: lightgray">__</span>`;
+          }
+        }
+        idx__++;
+      }
+        
+      // Update content and position of toolTipB
+      let tTD = d3.select("#toolTip-D")
+                  .html(`${toolTipContent}`);
+      let [tTw, tTh] = [tTD.node().clientWidth, tTD.node().clientHeight];
+
+      // Ensure that toolTip does not cross boundary of parent container
+      if (x <= oDivWidth/2 && y <= oDivHeight/2) {
+        tTD.style("left", `${x+20}px`)
+           .style("top", `${y}px`);
+      }
+      if (x > oDivWidth/2 && y > oDivHeight/2) {
+        tTD.style("left", `${x-tTw-20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x < oDivWidth/2 && y > oDivHeight/2) {
+        tTD.style("left", `${x+20}px`)
+           .style("top", `${y-tTh}px`);
+      }
+      if (x > oDivWidth/2 && y < oDivHeight/2) {
+        tTD.style("left", `${x-tTw-20}px`)
+           .style("top", `${y}px`);
+      }
     },
     handleLineClick(d) {
       if (d3.selectAll(".alreadyClicked").empty())
@@ -199,7 +294,12 @@ export default {
     }
   },
   computed: {
-    data_: {
+    covidData: {
+      get() {
+        return this.$store.getters.covidData;
+      }
+    },
+    initialData: {
       get() {
         return this.$store.getters.dataViewD;
       }
