@@ -3,17 +3,19 @@
     <div id="control-title" class="title_">
       Control Board
     </div>
-    <div id="view-A-control" class="control-panel_">
-
-    </div>
-    <div id="view-B-control" class="control-panel_">
-
-    </div>
-    <div id="view-C-control" class="control-panel_">
-
-    </div>
-    <div id="view-D-control" class="control-panel_">
-
+    <div id="wrapper_controls">
+      <div id="view-A-control" class="control-panel_">
+  
+      </div>
+      <div id="view-B-control" class="control-panel_">
+  
+      </div>
+      <div id="view-C-control" class="control-panel_">
+  
+      </div>
+      <div id="view-D-control" class="control-panel_">
+  
+      </div>
     </div>
   </div> 
 </template>
@@ -61,11 +63,12 @@ export default {
 
 #control-title {
   transform: translateY(-10%);
+  height: 3.9vh;
 }
 
 .view-E {
   width: calc(17vw - 2px);
-  height: calc(100vh - 3px);
+  height: calc(100vh - 2px);
   background-color: rgb(195, 206, 255);
   border-radius: 5px;
   margin: 1px;
@@ -73,23 +76,32 @@ export default {
 }
 
 #view-A-control {
-
+  margin: 1px 1px 0px 1px;
 }
 
 #view-B-control {
-  
+  margin: 1px 1px 0px 1px;
 }
 
 #view-C-control {
-  
+  margin: 1px 1px 0px 1px;
 }
 
 #view-D-control {
-  
+  margin: 1px 1px 0px 1px;
 }
 
 .control-panel_ {
+  width: 16.5vw;
+  height: 23.75vh;
+  border-radius: 8px;
+  border: 2px solid darkgreen;
+}
 
+#wrapper_controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
 }
 
 </style>
