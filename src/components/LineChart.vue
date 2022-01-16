@@ -1,5 +1,7 @@
 <template>
   <div class="view-D" ref="viewD">
+    <div id="mouseline-viewD"></div>
+    <div id="toolTip-D" class="ToolTip"></div>
     <svg id="svg-D" ref="svgD" v-show="viewBoxIsSet" preserveAspectRatio="none">
       <g class="line-chart" ref="lineChart">
         <g class="axis axis-x hideAxisLine" ref="xAxis"></g>
@@ -8,7 +10,6 @@
         <g class="line-group" ref="lineGroup"></g>
       </g>
     </svg>
-    <div id="toolTip-D" class="ToolTip"></div>
   </div>
 </template>
 
@@ -106,6 +107,8 @@ export default {
     },
     handleMouseOver(d) {
       d3.select("#toolTip-D").style("opacity", 1);
+      d3.select("#mouseline-viewD")
+        .style("display", "initial");
 
       if (d3.selectAll(".alreadyClicked").empty())
         d3.selectAll(`.linesD:not(#${d[0]}_lineD)`).style("stroke", "grey").style("opacity", 0.4);
@@ -117,12 +120,18 @@ export default {
     },
     handleRectOver() {
       d3.select("#toolTip-D").style("opacity", 1);
+      d3.select("#mouseline-viewD")
+        .style("display", "initial");
     },
     handleRectLeave() {
       d3.select("#toolTip-D").style("opacity", 0);
+      d3.select("#mouseline-viewD")
+        .style("display", "none");
     },
     handleMouseLeave(d) {
       d3.select("#toolTip-D").style("opacity", 0);
+      d3.select("#mouseline-viewD")
+        .style("display", "none");
       if (d) {
         if (d3.selectAll(".alreadyClicked").empty())
           d3.selectAll(`.linesD`).style("stroke", d => this.colorPalette[this.mapCountryColorIdx[d[0]]]).style("opacity", 1);
@@ -137,6 +146,9 @@ export default {
       const domElem = d3.select(this.$refs.viewD).node();
       let [x, y] = d3.pointer(event, domElem);
       let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
+
+      d3.select("#mouseline-viewD")
+        .style("left", `${x}px`);
 
       let yValues = {};
       let currentFeature = this.currentFeatureSelection;
@@ -343,6 +355,15 @@ export default {
   top: 0;
   width: 100%;
   height: 100%;
+}
+
+#mouseline-viewD {
+  position: absolute;
+  top: 8%;
+  width: 0px;
+  height: 81%;
+  border: 1px solid rgba(0,0,0,0.4);
+  display: none;
 }
 
 </style>

@@ -1,7 +1,7 @@
 <template>
-  <div class="view-A" ref="viewA">
+  <div class="view-A" ref="viewA" style="cursor: grab;">
     <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet" preserveAspectRatio="xMidYMid meet">
-        <g id="choropleth-map" ref="choroplethMap"></g>
+        <g id="choropleth-map" ref="choroplethMap" style="cursor: default;"></g>
     </svg>
     <div id="toolTip-A" class="ToolTip"></div>
   </div>

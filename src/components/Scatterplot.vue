@@ -105,12 +105,16 @@ export default {
         .style("opacity", 0);
 
       if (d) {
-        d3.selectAll(`.pointsC`)
-          .style("opacity", 1)
-          .style("stroke-width", 0.7);
-        d3.selectAll(`.points-labelC`)
-          .style("opacity", 1)
-          .style("font-weight", "normal");
+        if (d3.selectAll(".alreadyClickedPoint").empty()) {
+          d3.selectAll(`.pointsC`).style("opacity", 1).style("stroke-width", 0.7);
+          d3.selectAll(`.points-labelC`).style("opacity", 1).style("font-weight", "normal");
+        }
+        else {
+          if (! document.getElementById(`${d.iso_code.replaceAll(" ", "")}_point`).classList.contains("alreadyClickedPoint")) {
+            d3.select(`#${d.iso_code.replaceAll(" ", "")}_point`).style("stroke-width", 0.7).style("opacity", 0.4);
+            d3.select(`#${d.iso_code.replaceAll(" ", "")}_pointlabel`).style("font-weight", "normal").style("opacity", 0.4);
+          }
+        }
       }
     },
     handleMouseMove(event, d) {
@@ -220,16 +224,40 @@ export default {
 
       if (d) {
         let id = d.iso_code.replaceAll(" ", "");
-        d3.selectAll(`.pointsC:not(#${id}_point)`)
-          .style("opacity", 0.4);
-        d3.selectAll(`.points-labelC:not(#${id}_pointlabel)`)
-          .style("opacity", 0.4)
 
-        d3.select(`#${id}_point`)
-          .style("stroke-width", 1.5);
-        d3.select(`#${id}_pointlabel`)
-          .style("font-weight", "bold");
+        if (d3.selectAll(".alreadyClickedPoint").empty()) {
+          d3.selectAll(`.pointsC:not(#${id}_point)`).style("opacity", 0.4).style("stroke-width", 0.7);
+          d3.selectAll(`.points-labelC:not(#${id}_pointlabel)`).style("opacity", 0.4).style("font-weight", "normal");
+        }
+        else {
+          if (! document.getElementById(`${id}_point`).classList.contains("alreadyClickedPoint")) {
+            d3.select(`#${id}_point`).style("opacity", 1).style("stroke-width", 1.5);
+            d3.select(`#${id}_pointlabel`).style("opacity", 1).style("font-weight", "bold"); 
+          }
+        }
       }
+    },
+    handlePointClick(d) {
+      if (d3.selectAll(".alreadyClickedPoint").empty()) {
+        d3.selectAll(`.pointsC:not(#${d.iso_code}_point)`).style("opacity", 0.4).style("stroke-width", 0.7);
+        d3.selectAll(`.points-labelC:not(#${d.iso_code}_pointlabel)`).style("opacity", 0.4).style("font-weight", "normal");
+      }
+      
+      d3.select(`#${d.iso_code}_point`).classed("alreadyClickedPoint", true);
+
+      if (d3.selectAll(".alreadyClickedPoint").size() == this.selectedCountries.length) {
+        d3.selectAll(".alreadyClickedPoint").classed("alreadyClickedPoint", false);
+      }
+      else {
+        d3.select(`#${d.iso_code}_point`).style("opacity", 1).style("stroke-width", 1.5);
+        d3.select(`#${d.iso_code}_pointlabel`).style("opacity", 1).style("font-weight", "bold");
+      }
+    },
+    handleChartClick() {
+      d3.selectAll(".pointsC")
+        .style("opacity", 1).style("stroke-width", 0.7);
+      d3.selectAll(".points-labelC").style("opacity", 1).style("font-weight", "normal");
+      d3.selectAll(".alreadyClickedPoint").classed("alreadyClickedPoint", false);
     },
     // Draw scatterplot including axes points and bivariate color scheme
     createChart() {
@@ -307,7 +335,8 @@ export default {
                  .on("click", (_, d) => this.handlePointClick(d))
                  .style('fill', '#00ff15')
                  .style('stroke', 'black')
-                 .style('stroke-width', 0.7);
+                 .style('stroke-width', 0.7)
+                 .style("cursor", "pointer");
 
       pointsGroup.selectAll("text")
                 .data(this.data_)
@@ -319,9 +348,9 @@ export default {
                 .attr("x", d => this.xScale(d.x)+7)
                 .on("mouseover", (_, d) => this.handleMouseOver(d))
                 .on("mouseleave", (_, d) => this.handleMouseLeave(d))
-                .on("click", this.handlePointClick)
+                .on("click", (_, d) => this.handlePointClick(d))
                 .on("mousemove", this.handleMouseMove)
-                .style("cursor", "default");
+                .style("cursor", "pointer");
 
       let elem = document.getElementsByClassName('points-labelC')[0];
       let style = window.getComputedStyle(elem, null).getPropertyValue('font-size');
@@ -451,9 +480,7 @@ export default {
     },
   },
   watch: {
-    data_: {
-      
-    }
+    
   }
 }
 
