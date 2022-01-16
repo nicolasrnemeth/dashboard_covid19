@@ -1,6 +1,7 @@
 <template>
   <div class="view-D" ref="viewD">
     <div id="mouseline-viewD"></div>
+    <div id="legendViewD"></div>
     <div id="toolTip-D" class="ToolTip"></div>
     <svg id="svg-D" ref="svgD" v-show="viewBoxIsSet" preserveAspectRatio="none">
       <g class="line-chart" ref="lineChart">
@@ -44,6 +45,7 @@ export default {
     this.setUpToolTipD();
     this.setInitialSelectedCountries();
     this.createChart();
+    this.updateLegend();
     this.createXAxisLabel("Date (month / year)");
     this.createYAxisLabel(this.formatFeatureText(this.currentFeatureSelection));
   },
@@ -104,6 +106,19 @@ export default {
     createYAxis() {
       let YAxis = d3.select(this.$refs.yAxis);
       YAxis.call(d3.axisLeft(this.yScale).tickSize(3)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
+    },
+    updateLegend() {
+      let sortedCountries = [...this.selectedCountries];
+      sortedCountries.sort();
+      
+      let legendContent = "";
+      for (let iso_code of sortedCountries) {
+        legendContent += `<span style="color: ${this.colorPalette[this.mapCountryColorIdx[iso_code]]};">${iso_code}</span>`;
+        legendContent += `<span style="color: white;">__</span>`;
+      }
+
+      d3.select("#legendViewD")
+        .html(`${legendContent}`);
     },
     handleMouseOver(d) {
       d3.select("#toolTip-D").style("opacity", 1);
@@ -364,6 +379,18 @@ export default {
   height: 81%;
   border: 1px solid rgba(0,0,0,0.4);
   display: none;
+}
+
+#legendViewD {
+  position: absolute;
+  z-index: 2;
+  font-size: calc((1.6vh + 0.8vw)/2);
+  font-family: Baskerville;
+  top: 0px;
+  left: 1%;
+  text-align: start !important;
+  text-anchor: start !important;
+  font-weight: bold !important;
 }
 
 </style>
