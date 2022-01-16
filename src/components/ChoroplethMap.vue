@@ -3,6 +3,7 @@
     <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet" preserveAspectRatio="xMidYMid meet">
         <g id="choropleth-map" ref="choroplethMap" style="cursor: default;"></g>
     </svg>
+    <div id="colorPaletteViewA"></div>
     <div id="toolTip-A" class="ToolTip"></div>
   </div>
 </template>
@@ -32,11 +33,21 @@ export default {
   },
   mounted() {
     this.createMap();
+    this.setUpColorPalette();
     this.colorCountries();
     this.setUpMouseEvents();
     this.setUpToolTipAAndDiv();
   },
   methods: {
+    setUpColorPalette() {
+      let colorPaletteContent = `<span style="color: black;">LOW-</span>`;
+      for (let color_ of this.colorSteps) {
+        colorPaletteContent += `<svg><rect style="fill: ${color_}; stroke-wdith: 1px; stroke: black;" width="2vw" height="2.2vh"></rect></svg>`;
+      }
+      colorPaletteContent += `<span style="color: black;">-HIGH</span>`;
+
+      d3.select("#colorPaletteViewA").html(colorPaletteContent);
+    },
     // Format feature variable text
     formatFeatureText(text) {
       let formattedText = text.split("_");
@@ -260,6 +271,22 @@ export default {
   top: 0;
   width: 100%;
   height: 100%;
+}
+
+#colorPaletteViewA {
+  position: absolute;
+  top: 2px;
+  left: 1%;
+  background-color: white;
+  z-index: 1;
+  font-size: calc((1.6vh + 0.8vw)/2);
+  font-family: Baskerville;
+  font-weight: bold;
+  display: flex;
+  width: 10vw;
+  height: 2.2vh;
+  line-height: 2.2vh;
+  vertical-align: middle;
 }
 
 </style>

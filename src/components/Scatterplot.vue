@@ -8,6 +8,7 @@
         <g class="points-group" ref="pointsGroup"></g>
       </g>
     </svg>
+    <div id="colorPaletteViewC"></div>
     <div id="toolTip-C" class="ToolTip"></div>
   </div>
 </template>
@@ -23,7 +24,8 @@ export default {
   data() {
     return {
       colorSteps: [
-        "#edf8fb", "#b2e2e2", "#66c2a4", "#2ca25f", "#006d2c"
+        //"#d01c8b", "#f1b6da", "#f7f7f7", "#b8e186", "#4dac26" diverging
+        "#ffffcc", "#c2e699", "#78c679", "#31a354", "#006837" //sequential
       ],
       data_: [],
       viewBoxIsSet: false,
@@ -44,12 +46,22 @@ export default {
     this.setInitialSelectedCountries();
     this.setUpToolTipCAndDiv();
     this.createChart();
+    this.setUpColorPalette();
     this.createXAxisLabel(this.formatFeatureText(this.xFeature));
     this.createYAxisLabel(this.formatFeatureText(this.yFeature));
-    this.resizePoints();
+    //this.resizePoints();
     this.colorPoints();
   },
   methods: {
+    setUpColorPalette() {
+      let colorPaletteContent = `<span style="color: black;">LOW-</span>`;
+      for (let color_ of this.colorSteps) {
+        colorPaletteContent += `<svg><rect style="fill: ${color_}; stroke-wdith: 1px; stroke: black;" width="2vw" height="2.2vh"></rect></svg>`;
+      }
+      colorPaletteContent += `<span style="color: black;">-HIGH</span>`;
+
+      d3.select("#colorPaletteViewC").html(colorPaletteContent);
+    },
     setInitialData() {
       this.data_ = this.initialData;
     },
@@ -328,7 +340,7 @@ export default {
                  .attr('id', d => d.iso_code.replaceAll(" ", "")+"_point")
                  .attr('cx', d => this.xScale(d.x))
                  .attr('cy', d => this.yScale(d.y))
-                 .attr('r', 2)
+                 .attr('r', 4)
                  .on("mouseover", (_, d) => this.handleMouseOver(d))
                  .on("mouseleave", (_, d) => this.handleMouseLeave(d))
                  .on("mousemove", this.handleMouseMove)
@@ -512,6 +524,22 @@ export default {
   text-anchor: start;
   font-family: Baskerville;
   font-size: 11px;
+}
+
+#colorPaletteViewC {
+  position: absolute;
+  top: 2px;
+  left: 72%;
+  background-color: white;
+  z-index: 1;
+  font-size: calc((1.6vh + 0.8vw)/2);
+  font-family: Baskerville;
+  font-weight: bold;
+  display: flex;
+  width: 10vw;
+  height: 2.2vh;
+  line-height: 2.2vh;
+  vertical-align: middle;
 }
 
 </style>

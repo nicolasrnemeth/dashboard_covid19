@@ -66,7 +66,7 @@ export default {
 .view-E {
   width: calc(17vw - 2px);
   height: calc(100vh - 3px);
-  background-color: lightskyblue;
+  background-color: rgb(195, 206, 255);
   border-radius: 5px;
   margin: 1px;
   border: 1px solid #000000;

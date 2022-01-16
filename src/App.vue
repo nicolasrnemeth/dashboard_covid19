@@ -128,7 +128,7 @@ body {
 }
 
 #app-title {
-  background-color: lightskyblue;
+  background-color: rgb(195, 206, 255);
   width: calc(83vw - 1px);
   height: 3.9vh;
   vertical-align: middle; 
