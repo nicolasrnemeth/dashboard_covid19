@@ -1,5 +1,5 @@
 <template>
-  <div class="view-C" ref="viewC">
+  <div id="ViewC_" class="view-C" ref="viewC">
     <svg id="svg-C" ref="svgC" v-show="viewBoxIsSet" preserveAspectRatio="none">
       <g class="scatter-plot" ref="scatterPlot">
         <g class="axis axis-x hideAxisLine" ref="xAxis"></g>
@@ -49,14 +49,14 @@ export default {
     this.setUpColorPalette();
     this.createXAxisLabel(this.formatFeatureText(this.xFeature));
     this.createYAxisLabel(this.formatFeatureText(this.yFeature));
-    //this.resizePoints();
+    this.resizePoints();
     this.colorPoints();
   },
   methods: {
     setUpColorPalette() {
       let colorPaletteContent = `<span style="color: black;">LOW-</span>`;
       for (let color_ of this.colorSteps) {
-        colorPaletteContent += `<svg><rect style="fill: ${color_}; stroke-wdith: 1px; stroke: black;" width="2vw" height="2.2vh"></rect></svg>`;
+        colorPaletteContent += `<svg><rect style="fill: ${color_}; stroke-wdith: 1px; stroke: black; width: 2vw; height: 2.2vh;"></rect></svg>`;
       }
       colorPaletteContent += `<span style="color: black;">-HIGH</span>`;
 
@@ -357,17 +357,19 @@ export default {
                 .text(d => d.iso_code)
                 .attr("class", "points-labelC")
                 .attr("id", d => d.iso_code+"_pointlabel")
-                .attr("x", d => this.xScale(d.x)+7)
                 .on("mouseover", (_, d) => this.handleMouseOver(d))
                 .on("mouseleave", (_, d) => this.handleMouseLeave(d))
                 .on("click", (_, d) => this.handlePointClick(d))
                 .on("mousemove", this.handleMouseMove)
+                .style("text-anchor", "start")
                 .style("cursor", "pointer");
 
+      //let pointRadius = d3.select(".points").attr("r");
       let elem = document.getElementsByClassName('points-labelC')[0];
       let style = window.getComputedStyle(elem, null).getPropertyValue('font-size');
       let fontSize = parseFloat(style); 
       pointsGroup.selectAll("text")
+                 .attr("x", d => this.xScale(d.x)+6)
                  .attr("y", d => this.yScale(d.y)+fontSize/2);
     },
     // Add space between marks and plot borders
@@ -437,25 +439,43 @@ export default {
     },
     // Apply size channel
     resizePoints() {
+      let values = {};
       for (let country of this.data_) {
-        let sizeVal = null;
         if (this.sizeChannelFeature in this.covidData[country.iso_code])
-          sizeVal = this.covidData[country.iso_code][this.sizeChannelFeature];
+          values[country] = this.covidData[country.iso_code][this.sizeChannelFeature];
         else {
           if ("data" in this.covidData[country.iso_code]) {
             for (let idx=this.covidData[country.iso_code].data.length-1; idx >= 0; idx--)
               if (this.sizeChannelFeature in this.covidData[country.iso_code].data[idx]) {
-                sizeVal = this.covidData[country.iso_code].data[idx][this.sizeChannelFeature];
+                values[country] = this.covidData[country.iso_code].data[idx][this.sizeChannelFeature];
                 break;
               }
           }
         }
-        if (sizeVal)
+      }
+      // Rescale all values such that the radius of the point with the largest value is X
+      // where X depends on the number of total points in the plot
+      let reScalingFactor = (4*4*Math.PI) / d3.max(Object.values(values));
+      if (Object.keys(values).length >= 10)
+        reScalingFactor = (8*8*Math.PI) / d3.max(Object.values(values));
+      if (Object.keys(values).length >= 20)
+        reScalingFactor = (12*12*Math.PI) / d3.max(Object.values(values));
+
+      for (let country of this.data_) {
+        if (country in values) {
+          let radius = ((values[country]*reScalingFactor)/Math.PI)**0.5;
           d3.select(`#${country.iso_code}_point`)
-            .attr("r", ((sizeVal*0.05)/Math.PI)**0.5);
+            .attr("r", radius);
+          d3.select(`#${country.iso_code}_pointlabel`)
+            .attr("x", this.xScale(country.x) + radius + 2)
+            .style("text-anchor", "start");
+        }
         else
           d3.select(`#${country.iso_code}_point`)
             .attr("r", 0);
+          d3.select(`#${country.iso_code}_pointlabel`)
+            .attr("x", this.xScale(country.x))
+            .style("text-anchor", "middle");
       }
     },
     dataExtent(feature) {

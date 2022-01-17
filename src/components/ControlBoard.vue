@@ -5,16 +5,16 @@
     </div>
     <div id="wrapper_controls">
       <div id="view-A-control" class="control-panel_">
-  
+        <!--<svg><rect class="overlayRect"></rect></svg>-->
       </div>
       <div id="view-B-control" class="control-panel_">
-  
+        <!--<svg><rect class="overlayRect"></rect></svg>-->
       </div>
       <div id="view-C-control" class="control-panel_">
-  
+        <!--<svg><rect class="overlayRect"></rect></svg>-->
       </div>
       <div id="view-D-control" class="control-panel_">
-  
+        <!--<svg><rect class="overlayRect"></rect></svg>-->
       </div>
     </div>
   </div> 
@@ -24,36 +24,65 @@
 
 <script>
 
+import * as d3 from 'd3';
+
 export default {
   name: 'ControlBoard',
   props: {
   },
   data() {
     return {
-      divPadding: {
-        top: 0, right: 0, bottom: 30, left: 0,
-      },
+      
     }
   },
   mounted() {
-    if (this.$refs.svgE) {
-      this.svgWidth = this.$refs.viewE.clientWidth;
-        this.svgHeight = this.$refs.viewE.clientHeight;
-    }
+    this.setUpHoverEvents();
   },
   methods: {
-  },
-  computed: {
-    selectedYear: {
-      get() {
-        return this.$store.getters.selectedYear;
-      },
-      set(val) {
-        this.$store.commit('changeSelectedYear', val);
-      },
+    handleMouseOver(event) {
+      if (event.target.id == "view-A-control")
+        d3.select("#ViewA_").style("border-width", "2px");
+      if (event.target.id == "view-B-control")
+        d3.select("#ViewB_").style("border-width", "2px");
+      if (event.target.id == "view-C-control")
+        d3.select("#ViewC_").style("border-width", "2px");
+      if (event.target.id == "view-D-control")
+        d3.select("#ViewD_").style("border-width", "2px");
+    },
+    handleMouseLeave(event) {
+      if (event.target.id == "view-A-control")
+        d3.select("#ViewA_").style("border-width", "1px");
+      if (event.target.id == "view-B-control")
+        d3.select("#ViewB_").style("border-width", "1px");
+      if (event.target.id == "view-C-control")
+        d3.select("#ViewC_").style("border-width", "1px");
+      if (event.target.id == "view-D-control")
+        d3.select("#ViewD_").style("border-width", "1px");
+    },
+    setUpHoverEvents() {
+      d3.select("#view-A-control")
+        .on("mouseover", this.handleMouseOver)
+        .on("mouseleave", this.handleMouseLeave);
+      d3.select("#view-B-control")
+        .on("mouseover", this.handleMouseOver)
+        .on("mouseleave", this.handleMouseLeave);
+      d3.select("#view-C-control")
+        .on("mouseover", this.handleMouseOver)
+        .on("mouseleave", this.handleMouseLeave);
+      d3.select("#view-D-control")
+        .on("mouseover", this.handleMouseOver)
+        .on("mouseleave", this.handleMouseLeave);
     },
   },
+  computed: {
+    covidData: {
+      get() {
+        return this.$store.getters.covidData;
+      }
+    }
+  },
   watch: {
+
   },
 }
 
@@ -95,8 +124,19 @@ export default {
   width: 16.5vw;
   height: 23.75vh;
   border-radius: 8px;
-  border: 2px solid darkgreen;
+  border: 1px solid black;
 }
+
+.control-panel_:hover {
+  border-width: 2px;
+}
+
+/*.overlayRect {
+  fill: gold;
+  border-radius: 8px;
+  height: calc(23.75vh - 4px);
+  width: calc(16.5vw - 4px)
+}*/
 
 #wrapper_controls {
   display: flex;

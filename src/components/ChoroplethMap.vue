@@ -1,5 +1,5 @@
 <template>
-  <div class="view-A" ref="viewA" style="cursor: grab;">
+  <div id="ViewA_" class="view-A" ref="viewA" style="cursor: grab;">
     <svg id="svg-A" ref="svgA" v-show="viewBoxIsSet" preserveAspectRatio="xMidYMid meet">
         <g id="choropleth-map" ref="choroplethMap" style="cursor: default;"></g>
     </svg>
@@ -42,7 +42,7 @@ export default {
     setUpColorPalette() {
       let colorPaletteContent = `<span style="color: black;">LOW-</span>`;
       for (let color_ of this.colorSteps) {
-        colorPaletteContent += `<svg><rect style="fill: ${color_}; stroke-wdith: 1px; stroke: black;" width="2vw" height="2.2vh"></rect></svg>`;
+        colorPaletteContent += `<svg><rect style="fill: ${color_}; stroke-wdith: 1px; stroke: black; width: 2vw; height: 2.2vh;"></rect></svg>`;
       }
       colorPaletteContent += `<span style="color: black;">-HIGH</span>`;
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="view-D" ref="viewD">
+  <div id="ViewD_" class="view-D" ref="viewD">
     <div id="mouseline-viewD"></div>
     <div id="legendViewD"></div>
     <div id="toolTip-D" class="ToolTip"></div>
@@ -190,7 +190,9 @@ export default {
       // Format and prep content for tool tip
       let toolTipContent = "<strong>Date: " + d3.timeFormat("%m/%d/%y")(date) + "</strong><br/>";
       let idx__ = 1;
-      for (let country of this.selectedCountries) {
+      let sortedCountries = [...this.selectedCountries];
+      sortedCountries.sort();
+      for (let country of sortedCountries) {
         if (d3.selectAll(".alreadyClicked").empty()) {
           toolTipContent += `<span style="color:${this.colorPalette[this.mapCountryColorIdx[country]]}">${country}</span>: ${yValues[country]}`;
           if (idx__ % 2 == 0 || (idx__ == this.selectedCountries.length && idx__ != 2))
