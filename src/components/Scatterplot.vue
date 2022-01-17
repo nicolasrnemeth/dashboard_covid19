@@ -470,12 +470,13 @@ export default {
             .attr("x", this.xScale(country.x) + radius + 2)
             .style("text-anchor", "start");
         }
-        else
+        else {
           d3.select(`#${country.iso_code}_point`)
             .attr("r", 0);
           d3.select(`#${country.iso_code}_pointlabel`)
             .attr("x", this.xScale(country.x))
             .style("text-anchor", "middle");
+        }
       }
     },
     dataExtent(feature) {
