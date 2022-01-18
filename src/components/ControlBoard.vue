@@ -19,38 +19,36 @@
           <input type="checkbox" id="toggleElem">
         </label>-->
         <div class="wrapper_viewB">
-          Select feature(s):
-          <select id="viewA_selection" class="form-control" onchange='this.size=1; this.blur();'>
-          </select>
-          Select countr(y)/(ies):
-          <div id="checkboxes_viewC" class="country-selection">
-            <label> Austria <input type="checkbox"/> </label>
-          </div>
+          Select feature:
+          <select id="viewB_selection" class="form-control" onchange='this.size=1; this.blur();'></select>
+          Select countries:
+          <div id="checkboxes_viewB" class="country-selection"></div>
         </div>
       </div>
       <div id="view-C-control" class="control-panel_">
         <strong>Scatter Chart</strong>
         <div class="wrapper_viewC">
-          Encode by x-position:
+          Encode on x-axis:
           <select id="viewC_x" class="form-control" onchange='this.size=1; this.blur();'></select>
-          Encode by y-position:
+          Encode on y-axis:
           <select id="viewC_y" class="form-control" onchange='this.size=1; this.blur();'></select>
           Encode by color:
           <select id="viewC_color" class="form-control" onchange='this.size=1; this.blur();'></select>
           Encode by size:
           <select id="viewC_size" class="form-control" onchange='this.size=1; this.blur();'></select>
           Select countries:
-          <div id="checkboxes_viewC" class="country-selection">
-            <label> Austria <input type="checkbox"/> </label>
-          </div>
+          <div id="checkboxes_viewC" class="country-selection"></div>
         </div>
       </div>
       <div id="view-D-control" class="control-panel_">
         <!--<svg><rect class="overlayRect"></rect></svg>-->
         <strong>Line Chart</strong>
-        <div id="checkboxes_viewC" class="country-selection">
-            <label> Austria <input type="checkbox"/> </label>
-          </div>
+        <div class="wrapper_viewD">
+          Select feature:
+          <select id="viewD_selection" class="form-control" onchange='this.size=1; this.blur();'></select>
+          Select countries:
+          <div id="checkboxes_viewD" class="country-selection"></div>
+        </div>
       </div>
     </div>
   </div> 
@@ -76,6 +74,35 @@ export default {
         "female_smokers", "male_smokers", "handwashing_facilities", "life_expectancy", "human_development_index", "hospital_beds_per_thousand",
         "population_density"
       ],
+      viewB_features: [
+        "total_cases_per_million", "new_cases_per_million", "new_cases_smoothed_per_million", "total_deaths_per_million", "new_deaths_per_million",
+        "icu_patients_per_million", "hosp_patients_per_million", "weekly_icu_admissions_per_million", "weekly_hosp_admissions_per_million",
+        "stringency_index", "reproduction_rate", "total_tests_per_thousand", "new_tests_per_thousand", "positive_rate", "tests_per_case",
+        "total_vaccinations_per_hundred", "people_vaccinated_per_hundred", "people_fully_vaccinated_per_hundred", "total_boosters_per_hundred",
+        "new_deaths_smoothed_per_million"
+      ],
+      viewC_features: [
+        "total_cases_per_million", "total_deaths_per_million",
+        "icu_patients_per_million", "hosp_patients_per_million", "weekly_icu_admissions_per_million", "weekly_hosp_admissions_per_million",
+        "stringency_index", "reproduction_rate", "total_tests_per_thousand", "positive_rate",
+        "people_vaccinated_per_hundred", "people_fully_vaccinated_per_hundred", "total_boosters_per_hundred",
+        "median_age", "aged_65_older", "aged_70_older", "gdp_per_capita", "extreme_poverty", "cardiovasc_death_rate", "diabetes_prevalence",
+        "female_smokers", "male_smokers", "handwashing_facilities", "life_expectancy", "human_development_index", "hospital_beds_per_thousand",
+        "population_density"
+      ],
+      viewD_features: [
+        "total_cases_per_million", "new_cases_per_million", "total_deaths_per_million", "new_deaths_per_million",
+        "icu_patients_per_million", "hosp_patients_per_million", "weekly_icu_admissions_per_million", "weekly_hosp_admissions_per_million",
+        "stringency_index", "reproduction_rate", "total_tests_per_thousand", "new_tests_per_thousand", "positive_rate", "tests_per_case",
+        "total_vaccinations_per_hundred", "people_vaccinated_per_hundred", "people_fully_vaccinated_per_hundred", "total_boosters_per_hundred",
+        "total_cases", "new_cases", "new_cases_smoothed", "total_deaths", "new_deaths", "new_deaths_smoothed", "excess_mortality", "excess_mortality_cumulative_absolute",
+        "icu_patients", "hosp_patients", "weekly_icu_admissions", "weekly_hosp_admissions", "total_tests", "new_tests", "new_tests_smoothed",
+        "total_vaccinations", "people_vaccinated", "people_fully_vaccinated", "total_boosters", "new_deaths_smoothed_per_million",
+        "new_cases_smoothed_per_million", "new_deaths_smoothed_per_million"
+      ],
+      initiallySelectedCountries: [
+        "Austria", "Germany", "France", "Ireland"
+      ],
       viewB: {
         features: [],
       },
@@ -92,20 +119,83 @@ export default {
   },
   mounted() {
     this.viewA_features.sort();
+    this.viewB_features.sort();
+    this.viewC_features.sort();
+    this.viewD_features.sort();
     this.setUpHoverEvents();
     this.setUpSelectionViewA();
+    this.setUpSelectionViewB();
+    this.setUpSelectionViewC();
+    this.setUpSelectionViewD();
+    this.setUpCheckboxes();
   },
   methods: {
     setUpSelectionViewA() {
       let selectionContent = "";
       for (let feature of this.viewA_features) {
-        selectionContent += `<option value="${feature}">${this.formatFeatureText(feature)}</option>`;
+        selectionContent += `<option value="${feature}"`;
+        if (feature == "human_development_index")
+          selectionContent += ` selected="selected"`;
+        selectionContent += `>${this.formatFeatureText(feature)}</option>`;
       }
       
       d3.select("#viewA_selection").html(selectionContent);
     },
     setUpSelectionViewB() {
-
+      let selectionContent = "";
+      for (let feature of this.viewB_features) {
+        selectionContent += `<option value="${feature}"`;
+        if (feature == "new_cases_smoothed_per_million")
+          selectionContent += ` selected="selected"`;
+        selectionContent += `>${this.formatFeatureText(feature)}</option>`;
+      }
+      
+      d3.select("#viewB_selection").html(selectionContent);
+    },
+    setUpSelectionViewC() {
+      let selectX = "";
+      let selectY = "";
+      let selectColor = "";
+      let selectSize = "";
+      for (let feature of this.viewC_features) {
+        selectX += `<option value="${feature}"`;
+        selectY += `<option value="${feature}"`;
+        selectColor += `<option value="${feature}"`;
+        selectSize += `<option value="${feature}"`;
+        if (feature == "gdp_per_capita")
+          selectX += ` selected="selected"`;
+        if (feature == "cardiovasc_death_rate")
+          selectY += ` selected="selected"`;
+        if (feature == "people_fully_vaccinated_per_hundred")
+          selectColor += ` selected="selected"`;
+        if (feature == "total_deaths_per_million")
+          selectSize += ` selected="selected"`;
+        selectX += `>${this.formatFeatureText(feature)}</option>`;
+        selectY += `>${this.formatFeatureText(feature)}</option>`;
+        selectColor += `>${this.formatFeatureText(feature)}</option>`;
+        selectSize += `>${this.formatFeatureText(feature)}</option>`;
+      }
+      
+      d3.select("#viewC_x").html(selectX);
+      d3.select("#viewC_y").html(selectY);
+      d3.select("#viewC_color").html(selectColor);
+      d3.select("#viewC_size").html(selectSize);
+    },
+    setUpSelectionViewD() {
+      let selectionContent = "";
+      for (let feature of this.viewD_features) {
+        selectionContent += `<option value="${feature}"`;
+        if (feature == "new_deaths_smoothed_per_million")
+          selectionContent += ` selected="selected"`;
+        selectionContent += `>${this.formatFeatureText(feature)}</option>`;
+      }
+      
+      d3.select("#viewD_selection").html(selectionContent);
+    },
+    setUpCheckboxes() {
+      d3.select("#checkboxes_viewB").html(this.checkboxContent);
+      d3.select("#checkboxes_viewC").html(this.checkboxContent);
+      d3.select("#checkboxes_viewD").html(this.checkboxContent);
     },
     formatFeatureText(text) {
       let formattedText = text.split("_");
@@ -159,6 +249,11 @@ export default {
       get() {
         return this.$store.getters.allCountries;
       }
+    },
+    checkboxContent: {
+      get() {
+        return this.$store.getters.checkboxContent;
+      }
     }
   },
   watch: {
@@ -197,11 +292,16 @@ export default {
   border-radius: 8px;
   margin-bottom: 4px;
   background-color: white;
+  height: 35vh;
 }
 
 .country-selection label {
   margin: 0;
-  margin-left: 0.8vw;
+  margin-left: 1vw;
+}
+
+.country-selection input {
+  margin-right: 1vw;
 }
 
 #view-A-control {
@@ -258,6 +358,14 @@ export default {
   height: 100% !important;
   margin: 0 auto !important;
   font-size: 14px !important;
+}
+
+.continent_section {
+  display: table;
+  margin: 0 auto;
+  margin-bottom: 3px;
+  margin-top: 3px;
+  font-weight: bold;
 }
 
 </style>

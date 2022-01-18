@@ -12,9 +12,17 @@ const store = new Vuex.Store({
       "female_smokers", "male_smokers", "handwashing_facilities"
     ],
     mapIsoCodeName: {},
+    checkboxContent: "",
     extentDates: [],
     dataIsReady: false,
-    allCountries: [],
+    allCountries: {
+      Europe: [],
+      Africa: [],
+      Asia: [],
+      "North America": [],
+      "South America": [],
+      Oceania: [],
+    },
     covidData: [],
     dataViewA: [],
     dataViewB: [],
@@ -166,22 +174,32 @@ const store = new Vuex.Store({
 
     },*/
     setUpMapIsoCodeName(state) {
-      let countries = [];
-      let map = {};
       for (let feature of mapWorld.features) {
         if ("iso_a3" in feature.properties && "name" in feature.properties)
-          map[feature.properties.iso_a3] = feature.properties.name;
+          state.mapIsoCodeName[feature.properties.iso_a3] = feature.properties.name;
       }
       for (let iso_code in state.covidData) {
-        if (iso_code.length == 3 && iso_code in state.mapIsoCodeName)
-          countries.push(state.mapIsoCodeName[iso_code].slice());
+        if (iso_code.length == 3 && iso_code in state.mapIsoCodeName && "continent" in state.covidData[iso_code])
+          state.allCountries[state.covidData[iso_code].continent].push(state.mapIsoCodeName[iso_code].slice());
       }
-      countries.sort();
-      Object.freeze(countries);
-      Object.freeze(map);
-      state.allCountries = countries;
-      state.mapIsoCodeName = map;
-    }
+      state.allCountries.Europe.sort();
+      state.allCountries.Africa.sort();
+      state.allCountries.Asia.sort();
+      state.allCountries['North America'].sort();
+      state.allCountries['South America'].sort();
+      state.allCountries.Oceania.sort();
+    },
+    setUpCheckBoxContent(state) {
+      for (let continent in state.allCountries) {
+        state.checkboxContent += `<span class="continent_section"> ${continent.toUpperCase()} </span>`;
+        for (let countryName of state.allCountries[continent]) {
+          state.checkboxContent += `<label><input type="checkbox"`;
+          if (["Austria", "Germany", "France", "Ireland"].includes(countryName))
+            state.checkboxContent += " checked";
+          state.checkboxContent += `/> ${countryName} </label></br>`;
+        }
+      }
+    },
   },
   getters: {
     dataViewA: state => state.dataViewA,
@@ -196,6 +214,7 @@ const store = new Vuex.Store({
     initialCountriesD: state => state.selectionD.countries,
     allCountries: state => state.allCountries,
     percentageValues: state => state.percentageValues,
+    checkboxContent: state => state.checkboxContent,
   },
   actions: {
     loadNPrepData(context) {
@@ -207,6 +226,8 @@ const store = new Vuex.Store({
         context.state.covidData = data;
         // Set up map between Iso code and full country name
         context.commit("setUpMapIsoCodeName");
+        // Create Html content for country selections on control board
+        context.commit("setUpCheckBoxContent");
         // Set the date Range for viewB to minimum and maximum considering the entire dataset
         context.commit("setDateRange");
         // Prepare data for intial state of each view
