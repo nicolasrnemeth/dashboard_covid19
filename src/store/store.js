@@ -52,8 +52,27 @@ const store = new Vuex.Store({
     },
     pageWidth: 500,
     pageHeight: 500,
+    controlA: "",
+    controlB: {
+      feature: "",
+      countries: [],
+    },
+    controlC: {
+      featX: "",
+      featY: "",
+      featCol: "",
+      featSize: "",
+      countries: [],
+    },
+    controlD: {
+      feature: "",
+      countries: [],
+    },
   },
   mutations: {
+    changeControlA(state, feature) {
+      state.controlA = feature;
+    },
     setDateRange(state) {
       let firstIteration = true;
       let minDate = undefined;
@@ -200,6 +219,18 @@ const store = new Vuex.Store({
         }
       }
     },
+    changeControlCfeatX(state, val) {
+      state.controlC.featX = val;
+    },
+    changeControlCfeatY(state, val) {
+      state.controlC.featY = val;
+    },
+    changeControlCcolor(state, val) {
+      state.controlC.featCol = val;
+    },
+    changeControlCsize(state, val) {
+      state.controlC.featSize = val;
+    },
   },
   getters: {
     dataViewA: state => state.dataViewA,
@@ -215,6 +246,16 @@ const store = new Vuex.Store({
     allCountries: state => state.allCountries,
     percentageValues: state => state.percentageValues,
     checkboxContent: state => state.checkboxContent,
+    // Control changes
+    // A
+    controlA: state => state.controlA,
+    // B
+    // C
+    controlCfeatX: state => state.controlC.featX,
+    controlCfeatY: state => state.controlC.featY,
+    controlCcolor: state => state.controlC.featCol,
+    controlCsize: state => state.controlC.featSize,
+    // D
   },
   actions: {
     loadNPrepData(context) {

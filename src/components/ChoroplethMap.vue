@@ -109,12 +109,28 @@ export default {
       let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
 
       let toolTipContent = null;
+      let foundByDate = false;
       if (d) {
         toolTipContent = `<strong>${d.properties.name}</strong><br/>`;
         toolTipContent += `${this.formatFeatureText(this.currentFeatureSelection)}: `;
-        if (this.covidData[d.properties.iso_a3] && this.currentFeatureSelection in this.covidData[d.properties.iso_a3])
+        let found = false;
+        if (this.covidData[d.properties.iso_a3] && this.currentFeatureSelection in this.covidData[d.properties.iso_a3]) {
+          found = true;
           toolTipContent += `${this.covidData[d.properties.iso_a3][this.currentFeatureSelection]}`;
-        else
+        }
+        
+        if (! found) {
+          for (let idx_=this.covidData[d.properties.iso_a3].data.length-1; idx_ >= 0; idx_--) {
+            if (this.currentFeatureSelection in this.covidData[d.properties.iso_a3].data[idx_]) {
+              if (this.covidData[d.properties.iso_a3].data[idx_][this.currentFeatureSelection] < 0)
+                continue;
+              foundByDate = true;
+              toolTipContent += `${this.covidData[d.properties.iso_a3].data[idx_][this.currentFeatureSelection]}`;
+              break;
+            }
+          }
+        }
+        if (! found && ! foundByDate)
           toolTipContent += null;
       }
 
@@ -207,6 +223,8 @@ export default {
           else {
             for (let idx_ = this.covidData[country].data.length-1; idx_ >= 0; idx_--) {
               if (this.currentFeatureSelection in this.covidData[country].data[idx_])
+                if (this.covidData[country].data[idx_][this.currentFeatureSelection] < 0)
+                  continue;
                 filtered_data.push(this.covidData[country].data[idx_][this.currentFeatureSelection]);
                 break;
             }
@@ -245,9 +263,20 @@ export default {
         return this.$store.getters.covidData;
       }
     },
+    controlA: {
+      get() {
+        return this.$store.getters.controlA;
+      }
+    },
   },
   watch: {
-    
+    controlA: {
+      handler: function() {
+        this.currentFeatureSelection = this.controlA;
+        this.colorCountries();
+      },
+      deep: true,
+    }
   }
 }
 

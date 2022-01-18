@@ -442,12 +442,14 @@ export default {
       let values = {};
       for (let country of this.data_) {
         if (this.sizeChannelFeature in this.covidData[country.iso_code])
-          values[country] = this.covidData[country.iso_code][this.sizeChannelFeature];
+          values[country.iso_code] = this.covidData[country.iso_code][this.sizeChannelFeature];
         else {
           if ("data" in this.covidData[country.iso_code]) {
             for (let idx=this.covidData[country.iso_code].data.length-1; idx >= 0; idx--)
               if (this.sizeChannelFeature in this.covidData[country.iso_code].data[idx]) {
-                values[country] = this.covidData[country.iso_code].data[idx][this.sizeChannelFeature];
+                if (this.covidData[country.iso_code].data[idx][this.sizeChannelFeature] < 0)
+                  continue;
+                values[country.iso_code] = this.covidData[country.iso_code].data[idx][this.sizeChannelFeature];
                 break;
               }
           }
@@ -462,8 +464,9 @@ export default {
         reScalingFactor = (12*12*Math.PI) / d3.max(Object.values(values));
 
       for (let country of this.data_) {
-        if (country in values) {
-          let radius = ((values[country]*reScalingFactor)/Math.PI)**0.5;
+        console.log(country.iso_code);
+        if (country.iso_code in values) {
+          let radius = ((values[country.iso_code]*reScalingFactor)/Math.PI)**0.5;
           d3.select(`#${country.iso_code}_point`)
             .attr("r", radius);
           d3.select(`#${country.iso_code}_pointlabel`)
@@ -511,9 +514,54 @@ export default {
                .domain([minVal, maxVal])
                .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
     },
+    controlCfeatX: {
+      get() {
+        return this.$store.getters.controlCfeatX;
+      }
+    },
+    controlCfeatY: {
+      get() {
+        return this.$store.getters.controlCfeatY;
+      }
+    },
+    controlCcolor: {
+      get() {
+        return this.$store.getters.controlCcolor;
+      }
+    },
+    controlCsize: {
+      get() {
+        return this.$store.getters.controlCsize;
+      }
+    }
   },
   watch: {
-    
+    controlCfeatX: {
+      handler: function() {
+        this.xFeature = this.controlCfeatX;
+      },
+      deep: true,
+    },
+    controlCfeatY: {
+      handler: function() {
+        this.yFeature = this.controlCfeatY;
+      },
+      deep: true,
+    },
+    controlCcolor: {
+      handler: function() {
+        this.colorChannelFeature = this.controlCcolor;
+        this.colorPoints();
+      },
+      deep: true,
+    },
+    controlCsize: {
+      handler: function() {
+        this.sizeChannelFeature = this.controlCsize;
+        this.resizePoints();
+      },
+      deep: true,
+    },
   }
 }
 

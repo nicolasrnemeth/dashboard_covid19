@@ -128,8 +128,37 @@ export default {
     this.setUpSelectionViewC();
     this.setUpSelectionViewD();
     this.setUpCheckboxes();
+
+    this.setUpListeners();
   },
   methods: {
+    setUpListeners() {
+      // Control A
+      d3.select("#viewA_selection").on("change", this.handleControlA);
+      // Control B
+
+      // Control C
+      d3.select("#viewC_x").on("change", this.handleXC);
+      d3.select("#viewC_y").on("change", this.handleYC);
+      d3.select("#viewC_color").on("change", this.handleColorC);
+      d3.select("#viewC_size").on("change", this.handleSizeC);
+      // Control D
+    },
+    handleControlA(event) {
+     this.$store.commit("changeControlA", event.target.value);
+    },
+    handleXC(event) {
+      this.$store.commit("changeControlCfeatX", event.target.value);
+    },
+    handleYC(event) {
+      this.$store.commit("changeControlCfeatY", event.target.value);
+    },
+    handleColorC(event) {
+      this.$store.commit("changeControlCcolor", event.target.value);
+    },
+    handleSizeC(event) {
+      this.$store.commit("changeControlCsize", event.target.value);
+    },
     setUpSelectionViewA() {
       let selectionContent = "";
       for (let feature of this.viewA_features) {
@@ -357,7 +386,7 @@ export default {
   width: 99% !important;
   height: 100% !important;
   margin: 0 auto !important;
-  font-size: 14px !important;
+  font-size: 1em !important;
 }
 
 .continent_section {
