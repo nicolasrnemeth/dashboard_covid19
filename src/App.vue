@@ -129,7 +129,7 @@ body {
 
 #app-title {
   background-color: rgb(195, 206, 255);
-  width: calc(83vw - 1px);
+  width: calc(81.5vw - 1px);
   height: 3.9vh;
   vertical-align: middle; 
   line-height: 3.9vh;

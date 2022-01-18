@@ -1,16 +1,20 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import * as d3 from 'd3';
-
 import mapWorld from '@/assets/world-geo.json';
 
 Vue.use(Vuex);
 
 const store = new Vuex.Store({
   state: {
+    percentageValues: [
+      "aged_65_older", "aged_70_older", "extreme_poverty", "diabetes_prevalence",
+      "female_smokers", "male_smokers", "handwashing_facilities"
+    ],
     mapIsoCodeName: {},
     extentDates: [],
     dataIsReady: false,
+    allCountries: [],
     covidData: [],
     dataViewA: [],
     dataViewB: [],
@@ -162,10 +166,21 @@ const store = new Vuex.Store({
 
     },*/
     setUpMapIsoCodeName(state) {
+      let countries = [];
+      let map = {};
       for (let feature of mapWorld.features) {
         if ("iso_a3" in feature.properties && "name" in feature.properties)
-          state.mapIsoCodeName[feature.properties.iso_a3] = feature.properties.name;
+          map[feature.properties.iso_a3] = feature.properties.name;
       }
+      for (let iso_code in state.covidData) {
+        if (iso_code.length == 3 && iso_code in state.mapIsoCodeName)
+          countries.push(state.mapIsoCodeName[iso_code].slice());
+      }
+      countries.sort();
+      Object.freeze(countries);
+      Object.freeze(map);
+      state.allCountries = countries;
+      state.mapIsoCodeName = map;
     }
   },
   getters: {
@@ -179,6 +194,8 @@ const store = new Vuex.Store({
     mapIsoCodeName: state => state.mapIsoCodeName,
     initialCountriesC: state => state.selectionC.countries,
     initialCountriesD: state => state.selectionD.countries,
+    allCountries: state => state.allCountries,
+    percentageValues: state => state.percentageValues,
   },
   actions: {
     loadNPrepData(context) {

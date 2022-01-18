@@ -523,7 +523,7 @@ export default {
 
 .view-C {
   position: relative;
-  width: calc(41.5vw - 2px);
+  width: calc(40.75vw - 2px);
   height: calc(48.05vh - 2px);
   /*background-color: rgb(231, 249, 255);*/
   border: 1px solid #000000;

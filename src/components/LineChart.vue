@@ -357,13 +357,14 @@ export default {
 
 .view-D {
   position: relative;
-  width: calc(41.5vw - 2px);
+  width: calc(40.75vw - 2px);
   height: calc(48.05vh - 2px);
   /*background-color: rgb(255, 209, 255)*/;
   border: 1px solid #000000;
   border-radius: 5px;
   box-shadow: 0 0 4px black;
-  margin: 1px; 
+  margin: 1px;
+  margin-left: calc(-0.75vw + 1px);
 }
 
 #svg-D {

@@ -5,29 +5,56 @@
     </div>
     <div id="wrapper_controls">
       <div id="view-A-control" class="control-panel_">
-        <!--<svg><rect class="overlayRect"></rect></svg>-->
-        Choropleth Map
+        <strong>Choropleth Map</strong>
         <div class="wrapper_viewA">
-          <select id="viewA_selection" class="form-control" onfocus='this.size=5;' onblur='this.size=1;' onchange='this.size=1; this.blur();'>
-          </select>
+          Select feature:
+          <select id="viewA_selection" class="form-control" onchange='this.size=1; this.blur();'></select>
         </div>
       </div>
       <div id="view-B-control" class="control-panel_">
-        <!--<svg><rect class="overlayRect"></rect></svg>-->
-        Multiple Line Chart
+        <strong>Multiple Line Chart</strong>
+        <br/>
+        <!--<label class="switch">
+          Compare by country/feature:
+          <input type="checkbox" id="toggleElem">
+        </label>-->
+        <div class="wrapper_viewB">
+          Select feature(s):
+          <select id="viewA_selection" class="form-control" onchange='this.size=1; this.blur();'>
+          </select>
+          Select countr(y)/(ies):
+          <div id="checkboxes_viewC" class="country-selection">
+            <label> Austria <input type="checkbox"/> </label>
+          </div>
+        </div>
       </div>
       <div id="view-C-control" class="control-panel_">
-        <!--<svg><rect class="overlayRect"></rect></svg>-->
-        Scatter Chart
+        <strong>Scatter Chart</strong>
+        <div class="wrapper_viewC">
+          Encode by x-position:
+          <select id="viewC_x" class="form-control" onchange='this.size=1; this.blur();'></select>
+          Encode by y-position:
+          <select id="viewC_y" class="form-control" onchange='this.size=1; this.blur();'></select>
+          Encode by color:
+          <select id="viewC_color" class="form-control" onchange='this.size=1; this.blur();'></select>
+          Encode by size:
+          <select id="viewC_size" class="form-control" onchange='this.size=1; this.blur();'></select>
+          Select countries:
+          <div id="checkboxes_viewC" class="country-selection">
+            <label> Austria <input type="checkbox"/> </label>
+          </div>
+        </div>
       </div>
       <div id="view-D-control" class="control-panel_">
         <!--<svg><rect class="overlayRect"></rect></svg>-->
-        Line Chart
+        <strong>Line Chart</strong>
+        <div id="checkboxes_viewC" class="country-selection">
+            <label> Austria <input type="checkbox"/> </label>
+          </div>
       </div>
     </div>
   </div> 
 </template>
-
 
 
 <script>
@@ -40,10 +67,6 @@ export default {
   },
   data() {
     return {
-      percentageValues: [
-         "aged_65_older", "aged_70_older", "extreme_poverty", "diabetes_prevalence",
-        "female_smokers", "male_smokers", "handwashing_facilities"
-      ],
       viewA_features: [
         "total_cases_per_million", "new_cases_per_million", "total_deaths_per_million", "new_deaths_per_million",
         "icu_patients_per_million", "hosp_patients_per_million", "weekly_icu_admissions_per_million", "weekly_hosp_admissions_per_million",
@@ -54,37 +77,35 @@ export default {
         "population_density"
       ],
       viewB: {
-        countries: [],
         features: [],
       },
       viewC: {
-        countries: [],
         featureX: [],
         featureY: [],
         sizeFeature: [],
         colorFeature: [],
       },
       viewD: {
-        countries: [],
         features: [],
       },
     }
   },
   mounted() {
-    this.percentageValues.sort();
     this.viewA_features.sort();
     this.setUpHoverEvents();
     this.setUpSelectionViewA();
   },
   methods: {
     setUpSelectionViewA() {
-      //<option value="">One</option>
       let selectionContent = "";
       for (let feature of this.viewA_features) {
         selectionContent += `<option value="${feature}">${this.formatFeatureText(feature)}</option>`;
       }
       
       d3.select("#viewA_selection").html(selectionContent);
+    },
+    setUpSelectionViewB() {
+
     },
     formatFeatureText(text) {
       let formattedText = text.split("_");
@@ -133,6 +154,11 @@ export default {
       get() {
         return this.$store.getters.covidData;
       }
+    },
+    countryList: {
+      get() {
+        return this.$store.getters.allCountries;
+      }
     }
   },
   watch: {
@@ -150,12 +176,32 @@ export default {
 }
 
 .view-E {
-  width: calc(17vw - 2px);
+  width: calc(18.5vw - 2px);
   height: calc(100vh - 2px);
   background-color: rgb(195, 206, 255);
   border-radius: 5px;
   margin: 1px;
+  margin-left: -1.4vw;
   border: 1px solid #000000;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.country-selection {
+  text-anchor: start;
+  text-align: left;
+  overflow: auto;
+  width: 98%;
+  margin: 0 auto;
+  border: 1px solid black;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  background-color: white;
+}
+
+.country-selection label {
+  margin: 0;
+  margin-left: 0.8vw;
 }
 
 #view-A-control {
@@ -163,53 +209,55 @@ export default {
 }
 
 #view-B-control {
-  margin: 1px 1px 0px 1px;
+  margin: 10px 1px 0px 1px;
 }
 
 #view-C-control {
-  margin: 1px 1px 0px 1px;
+  margin: 10px 1px 0px 1px;
 }
 
 #view-D-control {
-  margin: 1px 1px 0px 1px;
+  margin: 10px 1px 0px 1px;
 }
 
 .control-panel_ {
-  width: 16.5vw;
-  height: 23.75vh;
+  width: 99%;
   border-radius: 8px;
   border: 1px solid black;
+  background-color: lightgrey;
 }
 
 .control-panel_:hover {
   border-width: 2px;
 }
 
-/*.overlayRect {
-  fill: gold;
-  border-radius: 8px;
-  height: calc(23.75vh - 4px);
-  width: calc(16.5vw - 4px)
-}*/
-
 #wrapper_controls {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
   font-family: Baskerville;
+  font-size: calc((1.8vh + 1.4vw)/2);
 }
 
 .wrapper_viewA {
-  margin-top: 2px;
+  margin-top: 0.2vh;
+}
+
+.wrapper_viewC {
+  margin-top: 0px;
+}
+
+.switch {
+  margin-bottom: 0px !important;
 }
 
 .form-control {
   box-shadow: none !important;
   border-radius: 8px !important;
   width: 99% !important;
+  height: 100% !important;
   margin: 0 auto !important;
-  font-size: 12px !important;
-  overflow-x: scroll !important;
+  font-size: 14px !important;
 }
 
 </style>

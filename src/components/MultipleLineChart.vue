@@ -295,12 +295,13 @@ export default {
 <style>
 
 .view-B {
-  width: calc(41.5vw - 2px);
+  width: calc(40.75vw - 2px);
   height: calc(48.05vh - 2px);
   border: 1px solid #000000;
   border-radius: 5px;
   box-shadow: 0 0 4px black;
   margin: 1px;
+  margin-left: calc(-0.75vw + 1px);
   overflow: hidden !important;
 }
 
@@ -322,7 +323,7 @@ export default {
 .singleDiv {
   position: relative;
   height: 100%;
-  font-size: calc((1.8vh + 1vw)/2);
+  font-size: calc((1.4vh + 0.8vw)/2);
 }
 
 .yLabels {
