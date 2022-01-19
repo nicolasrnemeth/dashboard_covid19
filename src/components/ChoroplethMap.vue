@@ -114,21 +114,22 @@ export default {
         toolTipContent = `<strong>${d.properties.name}</strong><br/>`;
         toolTipContent += `${this.formatFeatureText(this.currentFeatureSelection)}: `;
         let found = false;
-        if (this.covidData[d.properties.iso_a3] && this.currentFeatureSelection in this.covidData[d.properties.iso_a3]) {
+        if (d.properties.iso_a3 in this.covidData && this.currentFeatureSelection in this.covidData[d.properties.iso_a3]) {
           found = true;
           toolTipContent += `${this.covidData[d.properties.iso_a3][this.currentFeatureSelection]}`;
         }
         
         if (! found) {
-          for (let idx_=this.covidData[d.properties.iso_a3].data.length-1; idx_ >= 0; idx_--) {
-            if (this.currentFeatureSelection in this.covidData[d.properties.iso_a3].data[idx_]) {
-              if (this.covidData[d.properties.iso_a3].data[idx_][this.currentFeatureSelection] < 0)
-                continue;
-              foundByDate = true;
-              toolTipContent += `${this.covidData[d.properties.iso_a3].data[idx_][this.currentFeatureSelection]}`;
-              break;
+          if (d.properties.iso_a3 in this.covidData)
+            for (let idx_=this.covidData[d.properties.iso_a3].data.length-1; idx_ >= 0; idx_--) {
+              if (this.currentFeatureSelection in this.covidData[d.properties.iso_a3].data[idx_]) {
+                if (this.covidData[d.properties.iso_a3].data[idx_][this.currentFeatureSelection] < 0)
+                  continue;
+                foundByDate = true;
+                toolTipContent += `${this.covidData[d.properties.iso_a3].data[idx_][this.currentFeatureSelection]}`;
+                break;
+              }
             }
-          }
         }
         if (! found && ! foundByDate)
           toolTipContent += null;
@@ -212,7 +213,7 @@ export default {
         return 4;
       return idx;
     },
-    // Add color scheme to states based on selected bivariate color scheme
+    // Add colors to countries based on selected color palette and values
     colorCountries() {
       let filtered_data = [];
       for (let country in this.covidData)
@@ -222,17 +223,18 @@ export default {
           }
           else {
             for (let idx_ = this.covidData[country].data.length-1; idx_ >= 0; idx_--) {
-              if (this.currentFeatureSelection in this.covidData[country].data[idx_])
+              if (this.currentFeatureSelection in this.covidData[country].data[idx_]) {
                 if (this.covidData[country].data[idx_][this.currentFeatureSelection] < 0)
                   continue;
                 filtered_data.push(this.covidData[country].data[idx_][this.currentFeatureSelection]);
                 break;
+              }
             }
           }
         }
 
       let [minVal, maxVal] = d3.extent(filtered_data);
-
+      
       for (let country in this.covidData) {
         if (country.length != 3) continue;
         if (this.currentFeatureSelection in this.covidData[country]) {

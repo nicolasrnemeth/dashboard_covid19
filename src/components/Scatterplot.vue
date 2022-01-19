@@ -295,16 +295,37 @@ export default {
       this.createPoints();
     },
     createXAxis() {
-      let XAxis = d3.select(this.$refs.xAxis)
+      let XAxis = d3.select(this.$refs.xAxis);
+      let factor = parseInt( ((this.xScale.domain()[1] + 1e-06).toString().indexOf('.')-1) / 3);
+      let suffix = "";
+      if (factor == 1)
+        suffix = " k";
+      if (factor == 2)
+        suffix = " M";
+      if (factor == 3)
+        suffix = " B";
+
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
-           .call(d3.axisBottom(this.xScale).tickSize(3)/*.tickFormat(d => d)*/);
+           .call(d3.axisBottom(this.xScale).tickSize(3).tickFormat(d => d/(10**(3*factor)) + suffix));
     },
     createYAxis() {
       let YAxis = d3.select(this.$refs.yAxis);
-      YAxis.call(d3.axisLeft(this.yScale).tickSize(3)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
+      let factor = parseInt( ((this.yScale.domain()[1] + 1e-06).toString().indexOf('.')-1) / 3);
+      let suffix = "";
+      if (factor == 1)
+        suffix = " k";
+      if (factor == 2)
+        suffix = " M";
+      if (factor == 3)
+        suffix = " B";
+
+      YAxis.call(d3.axisLeft(this.yScale).tickSize(3).tickFormat(d => d/(10**(3*factor)) + suffix));
     },
     createXAxisLabel(labelText) {
       let translateX = this.svgWidth - this.svgPadding.left - this.svgPadding.right;
+
+      if (document.getElementById("xLabelC"))
+        document.getElementById("xLabelC").remove();
 
       d3.select(this.$refs.xAxis)
         .append('text')
@@ -318,6 +339,9 @@ export default {
     },
     createYAxisLabel(labelText) {
       let translateY = this.svgHeight - this.svgPadding.top - this.svgPadding.bottom;
+      
+      if (document.getElementById("yLabelC"))
+        document.getElementById("yLabelC").remove();
 
       d3.select(this.$refs.yAxis)
         .append('text')
@@ -334,7 +358,7 @@ export default {
       const pointsGroup = d3.select(this.$refs.pointsGroup);
       
       pointsGroup.selectAll('.points')
-                 .data(this.data_)
+                 .data(this.data_, d => d.iso_code)
                  .join('circle')
                  .attr('class', 'pointsC')
                  .attr('id', d => d.iso_code.replaceAll(" ", "")+"_point")
@@ -345,15 +369,14 @@ export default {
                  .on("mouseleave", (_, d) => this.handleMouseLeave(d))
                  .on("mousemove", this.handleMouseMove)
                  .on("click", (_, d) => this.handlePointClick(d))
-                 .style('fill', '#00ff15')
+                 .style('fill', 'skyblue')
                  .style('stroke', 'black')
                  .style('stroke-width', 0.7)
                  .style("cursor", "pointer");
 
       pointsGroup.selectAll("text")
-                .data(this.data_)
-                .enter()
-                .append("text")
+                .data(this.data_, d => d.iso_code)
+                .join("text")
                 .text(d => d.iso_code)
                 .attr("class", "points-labelC")
                 .attr("id", d => d.iso_code+"_pointlabel")
@@ -384,106 +407,122 @@ export default {
     },
     // Apply color channel
     colorPoints() {
-      let filtered_data = [];
-      for (let country of this.selectedCountries) {
-        if (country in this.covidData) {
-          if (this.colorChannelFeature in this.covidData[country]) {
-            filtered_data.push(this.covidData[country][this.colorChannelFeature]);
-            continue;
+      if (this.colorChannelFeature != "None") {
+        let filtered_data = [];
+        for (let country of this.selectedCountries) {
+          if (country in this.covidData) {
+            if (this.colorChannelFeature in this.covidData[country]) {
+              filtered_data.push(this.covidData[country][this.colorChannelFeature]);
+              continue;
+            }
+            else {
+              let foundByDate = false;
+              if ("data" in this.covidData[country]) {
+                for (let idx=this.covidData[country].data.length-1; idx >= 0; idx--) {
+                  if (this.colorChannelFeature in this.covidData[country].data[idx]) {
+                    foundByDate = true;
+                    filtered_data.push(this.covidData[country].data[idx][this.colorChannelFeature]);
+                    break;
+                  }
+                }
+              }
+              if (foundByDate)
+                continue;
+            }
           }
-          else {
-            let foundByDate = false;
+          filtered_data.push(undefined);
+        }
+        let [minVal, maxVal] = d3.extent(filtered_data);
+        
+        let colIdx = undefined;
+        for (let country of this.selectedCountries) {
+          if (country in this.covidData) {
+            if (this.colorChannelFeature in this.covidData[country]) {
+              let colVal = this.covidData[country][this.colorChannelFeature];
+              colIdx = this.getColorIndex(colVal, minVal, maxVal);
+              d3.select("#"+country+"_point").style('fill', this.colorSteps[colIdx]);
+              continue;
+            }
             if ("data" in this.covidData[country]) {
-              for (let idx=this.covidData[country].data.length-1; idx >= 0; idx--) {
-                if (this.colorChannelFeature in this.covidData[country].data[idx]) {
+              let foundByDate = false;
+              for (let idx_=this.covidData[country].data.length-1; idx_ >= 0; idx_--) {
+                if (this.colorChannelFeature in this.covidData[country].data[idx_]) {
                   foundByDate = true;
-                  filtered_data.push(this.covidData[country].data[idx][this.colorChannelFeature]);
+                  let colVal = this.covidData[country].data[idx_][this.colorChannelFeature];
+                  colIdx = this.getColorIndex(colVal, minVal, maxVal);
+                  d3.select("#"+country+"_point").style('fill', this.colorSteps[colIdx]);
                   break;
                 }
               }
+              if (foundByDate)
+                continue;
             }
-            if (foundByDate)
-              continue;
           }
+          d3.select("#"+country+"_point").style('fill', "#cccccc");
         }
-        filtered_data.push(undefined);
       }
-      let [minVal, maxVal] = d3.extent(filtered_data);
-      
-      let colIdx = undefined;
-      for (let country of this.selectedCountries) {
-        if (country in this.covidData) {
-          if (this.colorChannelFeature in this.covidData[country]) {
-            let colVal = this.covidData[country][this.colorChannelFeature];
-            colIdx = this.getColorIndex(colVal, minVal, maxVal);
-            d3.select("#"+country+"_point").style('fill', this.colorSteps[colIdx]);
-            continue;
-          }
-          if ("data" in this.covidData[country]) {
-            let foundByDate = false;
-            for (let idx_=this.covidData[country].data.length-1; idx_ >= 0; idx_--) {
-              if (this.colorChannelFeature in this.covidData[country].data[idx_]) {
-                foundByDate = true;
-                let colVal = this.covidData[country].data[idx_][this.colorChannelFeature];
-                colIdx = this.getColorIndex(colVal, minVal, maxVal);
-                d3.select("#"+country+"_point").style('fill', this.colorSteps[colIdx]);
-                break;
-              }
-            }
-            if (foundByDate)
-              continue;
-          }
-        }
-        d3.select("#"+country+"_point").style('fill', "#cccccc");
+      else {
+        d3.selectAll(".pointsC").style("fill", "skyblue");
       }
     },
     // Apply size channel
     resizePoints() {
-      let values = {};
-      for (let country of this.data_) {
-        if (this.sizeChannelFeature in this.covidData[country.iso_code])
-          values[country.iso_code] = this.covidData[country.iso_code][this.sizeChannelFeature];
-        else {
-          if ("data" in this.covidData[country.iso_code]) {
-            for (let idx=this.covidData[country.iso_code].data.length-1; idx >= 0; idx--)
-              if (this.sizeChannelFeature in this.covidData[country.iso_code].data[idx]) {
-                if (this.covidData[country.iso_code].data[idx][this.sizeChannelFeature] < 0)
-                  continue;
-                values[country.iso_code] = this.covidData[country.iso_code].data[idx][this.sizeChannelFeature];
-                break;
-              }
+      if (this.sizeChannelFeature != "None") {
+        let values = {};
+        for (let country of this.data_) {
+          if (this.sizeChannelFeature in this.covidData[country.iso_code])
+            values[country.iso_code] = this.covidData[country.iso_code][this.sizeChannelFeature];
+          else {
+            if ("data" in this.covidData[country.iso_code]) {
+              for (let idx=this.covidData[country.iso_code].data.length-1; idx >= 0; idx--)
+                if (this.sizeChannelFeature in this.covidData[country.iso_code].data[idx]) {
+                  if (this.covidData[country.iso_code].data[idx][this.sizeChannelFeature] < 0)
+                    continue;
+                  values[country.iso_code] = this.covidData[country.iso_code].data[idx][this.sizeChannelFeature];
+                  break;
+                }
+            }
+          }
+        }
+        // Rescale all values such that the radius of the point with the largest value is X
+        // where X depends on the number of total points in the plot
+        let reScalingFactor = (4*4*Math.PI) / d3.max(Object.values(values));
+        if (Object.keys(values).length >= 10)
+          reScalingFactor = (8*8*Math.PI) / d3.max(Object.values(values));
+        if (Object.keys(values).length >= 20)
+          reScalingFactor = (12*12*Math.PI) / d3.max(Object.values(values));
+  
+        for (let country of this.data_) {
+          if (country.iso_code in values) {
+            let radius = ((values[country.iso_code]*reScalingFactor)/Math.PI)**0.5;
+            d3.select(`#${country.iso_code}_point`)
+              .attr("r", radius);
+            d3.select(`#${country.iso_code}_pointlabel`)
+              .attr("x", this.xScale(country.x) + radius + 2)
+              .style("text-anchor", "start");
+          }
+          else {
+            d3.select(`#${country.iso_code}_point`)
+              .attr("r", 0);
+            d3.select(`#${country.iso_code}_pointlabel`)
+              .attr("x", this.xScale(country.x))
+              .style("text-anchor", "middle");
           }
         }
       }
-      // Rescale all values such that the radius of the point with the largest value is X
-      // where X depends on the number of total points in the plot
-      let reScalingFactor = (4*4*Math.PI) / d3.max(Object.values(values));
-      if (Object.keys(values).length >= 10)
-        reScalingFactor = (8*8*Math.PI) / d3.max(Object.values(values));
-      if (Object.keys(values).length >= 20)
-        reScalingFactor = (12*12*Math.PI) / d3.max(Object.values(values));
-
-      for (let country of this.data_) {
-        console.log(country.iso_code);
-        if (country.iso_code in values) {
-          let radius = ((values[country.iso_code]*reScalingFactor)/Math.PI)**0.5;
-          d3.select(`#${country.iso_code}_point`)
-            .attr("r", radius);
-          d3.select(`#${country.iso_code}_pointlabel`)
-            .attr("x", this.xScale(country.x) + radius + 2)
-            .style("text-anchor", "start");
-        }
-        else {
-          d3.select(`#${country.iso_code}_point`)
-            .attr("r", 0);
-          d3.select(`#${country.iso_code}_pointlabel`)
-            .attr("x", this.xScale(country.x))
-            .style("text-anchor", "middle");
-        }
+      else {
+        d3.selectAll(".pointsC").attr("r", 4);
+        d3.selectAll(".points-labelC").attr("x", d => this.xScale(d.x)+6);
       }
     },
     dataExtent(feature) {
       return d3.extent(this.data_, d => d[feature]);
+    },
+    removeLabelsNPoints() {
+      if (! d3.selectAll(".pointsC").empty())
+        document.querySelectorAll(".pointsC").forEach(p => p.remove());
+      if (! d3.selectAll(".points-labelC").empty())
+        document.querySelectorAll(".points-labelC").forEach(l => l.remove());
     },
   },
   computed: {
@@ -533,18 +572,79 @@ export default {
       get() {
         return this.$store.getters.controlCsize;
       }
+    },
+    controlCcountry: {
+      get() {
+        return this.$store.getters.controlCcountry;
+      }
+    },
+    controlCchecked: {
+      get() {
+        return this.$store.getters.controlCchecked;
+      }
+    },
+    controlCtarget: {
+      get() {
+        return this.$store.getters.controlCtarget;
+      }
     }
   },
   watch: {
     controlCfeatX: {
       handler: function() {
         this.xFeature = this.controlCfeatX;
+        for (let dataIdx=0; dataIdx < this.data_.length; dataIdx++) {
+          if (this.xFeature in this.covidData[this.data_[dataIdx].iso_code])
+            this.data_[dataIdx].x = this.covidData[this.data_[dataIdx].iso_code][this.xFeature];
+          else {
+            for (let idx_=this.covidData[this.data_[dataIdx].iso_code].data.length-1; idx_ >= 0; idx_--) {
+              if (this.xFeature in this.covidData[this.data_[dataIdx].iso_code].data[idx_]) {
+                if (this.covidData[this.data_[dataIdx].iso_code].data[idx_][this.xFeature] < 0)
+                  continue;
+                this.data_[dataIdx].x = this.covidData[this.data_[dataIdx].iso_code].data[idx_][this.xFeature];
+                break;
+              }
+            }
+          }
+        }
+        this.removeLabelsNPoints();
+
+        this.createChart();
+        this.createXAxisLabel(this.formatFeatureText(this.xFeature));
+        this.createYAxisLabel(this.formatFeatureText(this.yFeature));
+        if (this.sizeChannelFeature != "None")
+          this.resizePoints();
+        if (this.colorChannelFeature != "None")
+          this.colorPoints();
       },
       deep: true,
     },
     controlCfeatY: {
       handler: function() {
         this.yFeature = this.controlCfeatY;
+        for (let dataIdx=0; dataIdx < this.data_.length; dataIdx++) {
+          if (this.yFeature in this.covidData[this.data_[dataIdx].iso_code])
+            this.data_[dataIdx].y = this.covidData[this.data_[dataIdx].iso_code][this.yFeature];
+          else {
+            for (let idx_=this.covidData[this.data_[dataIdx].iso_code].data.length-1; idx_ >= 0; idx_--) {
+              if (this.yFeature in this.covidData[this.data_[dataIdx].iso_code].data[idx_]) {
+                if (this.covidData[this.data_[dataIdx].iso_code].data[idx_][this.yFeature] < 0)
+                  continue;
+                this.data_[dataIdx].y = this.covidData[this.data_[dataIdx].iso_code].data[idx_][this.yFeature];
+                break;
+              }
+            }
+          }
+        }
+        this.removeLabelsNPoints();
+
+        this.createChart();
+        this.createXAxisLabel(this.formatFeatureText(this.xFeature));
+        this.createYAxisLabel(this.formatFeatureText(this.yFeature));
+        if (this.sizeChannelFeature != "None")
+          this.resizePoints();
+        if (this.colorChannelFeature != "None")
+          this.colorPoints();
       },
       deep: true,
     },
@@ -562,6 +662,75 @@ export default {
       },
       deep: true,
     },
+    controlCcountry: {
+      handler: function() {
+        if (this.controlCchecked) {
+          let xValue = undefined;
+          let yValue = undefined;
+
+          if (this.yFeature in this.covidData[this.controlCcountry])
+            yValue = this.covidData[this.controlCcountry][this.yFeature];
+          else {
+            for (let idx_=this.covidData[this.controlCcountry].data.length-1; idx_ >= 0; idx_--) {
+              if (this.yFeature in this.covidData[this.controlCcountry].data[idx_]) {
+                if (this.covidData[this.controlCcountry].data[idx_][this.yFeature] < 0)
+                  continue;
+                yValue = this.covidData[this.controlCcountry].data[idx_][this.yFeature];
+                break;
+              }
+            }
+          }
+          if (this.xFeature in this.covidData[this.controlCcountry])
+            xValue = this.covidData[this.controlCcountry][this.xFeature];
+          else {
+            for (let idx_=this.covidData[this.controlCcountry].data.length-1; idx_ >= 0; idx_--) {
+              if (this.xFeature in this.covidData[this.controlCcountry].data[idx_]) {
+                if (this.covidData[this.controlCcountry].data[idx_][this.xFeature] < 0)
+                  continue;
+                xValue = this.covidData[this.controlCcountry].data[idx_][this.xFeature];
+                break;
+              }
+            }
+          }
+
+          let countryObj = {
+            iso_code: this.controlCcountry.slice(),
+            x: xValue,
+            y: yValue,
+          };
+
+          if(countryObj.x != undefined && countryObj.y != undefined) {
+            this.data_.push(countryObj);
+            this.selectedCountries.push(countryObj.iso_code.slice());
+
+            this.removeLabelsNPoints();
+
+            this.createChart();
+            if (this.sizeChannelFeature != "None")
+              this.resizePoints();
+            if (this.colorChannelFeature != "None")
+              this.colorPoints();
+          }
+          else {
+            this.controlCtarget.disabled = true;
+            this.controlCtarget.checked = false;
+            if (countryObj.x == undefined)
+              alert(`Country could not be added, because its x-value is null. 
+                     Countries for which a certain feature is undefined will be disabled,
+                    until the respective another feature for x-axis encoding is selected.`);
+            else
+              alert(`Country could not be added, because its y-value is null. 
+                     Countries for which a certain feature is undefined will be disabled,
+                     until the respective another feature for y-axis encoding is selected.`);
+          }
+        }
+        if (!this.controlCchecked) {
+          this.data_ = this.data_.filter(d => d.iso_code != this.controlCcountry);
+          this.selectedCountries = d3.map(this.data_, d => d.iso_code);
+        }
+      },
+      deep: true,
+    }
   }
 }
 

@@ -98,14 +98,22 @@ export default {
     },
     createXAxis() {
       let XAxis = d3.select(this.$refs.xAxis);
-      //let tickValues = "";
       XAxis.attr('transform', `translate(0, ${this.svgHeight - this.svgPadding.top - this.svgPadding.bottom})`)
            .call(d3.axisBottom(this.xScale).tickFormat(d3.timeFormat("%m/%y"))
-           .tickSize(3)/*.tickValues(tickValues)*/);
+           .tickSize(3));
     },
     createYAxis() {
       let YAxis = d3.select(this.$refs.yAxis);
-      YAxis.call(d3.axisLeft(this.yScale).tickSize(3)/*.tickFormat(d => (d3.format(".1f")(d/1e03) + " k"))*/);
+      let factor = parseInt( ((this.yScale.domain()[1] + 1e-06).toString().indexOf('.')-1) / 3);
+      let suffix = "";
+      if (factor == 1)
+        suffix = " k";
+      if (factor == 2)
+        suffix = " M";
+      if (factor == 3)
+        suffix = " B";
+
+      YAxis.call(d3.axisLeft(this.yScale).tickSize(3).tickFormat(d => d/(10**(3*factor)) + suffix));
     },
     updateLegend() {
       let sortedCountries = [...this.selectedCountries];
@@ -260,13 +268,13 @@ export default {
       // Specify line
       let line = d3.line().curve(d3.curveBasis).x(d => this.xScale(d.x)).y(d => this.yScale(d.y));
       // Plot lines
-      const lineGroup = d3.select(this.$refs.lineGroup)
+      const lineGroup = d3.select(this.$refs.lineGroup);
 
       for (let colIdx=0; colIdx < this.selectedCountries.length; colIdx++)
         this.mapCountryColorIdx[this.selectedCountries[colIdx].slice()] = colIdx;
  
       lineGroup.selectAll("lines")
-               .data(grouped_data)
+               .data(grouped_data, d => d[0])
                .enter()
                .append("path")
                .attr("id", d => `${d[0]}_lineD`)

@@ -12,6 +12,7 @@ const store = new Vuex.Store({
       "female_smokers", "male_smokers", "handwashing_facilities"
     ],
     mapIsoCodeName: {},
+    mapNameIsoCode: {},
     checkboxContent: "",
     extentDates: [],
     dataIsReady: false,
@@ -55,18 +56,24 @@ const store = new Vuex.Store({
     controlA: "",
     controlB: {
       feature: "",
-      countries: [],
+      country: "",
+      ckecked: undefined,
+      target: undefined,
     },
     controlC: {
       featX: "",
       featY: "",
       featCol: "",
       featSize: "",
-      countries: [],
+      country: "",
+      checked: undefined,
+      target: undefined,
     },
     controlD: {
       feature: "",
-      countries: [],
+      country: "",
+      checked: undefined,
+      target: undefined,
     },
   },
   mutations: {
@@ -147,14 +154,14 @@ const store = new Vuex.Store({
       }
     },
     prepDataViewC(state, selection) {
-      let nullIDs = [];
+      //let nullIDs = [];
       let _data_ = [];
       
       for (let country of selection.countries) {
         // Track and omit null values
         if (state.covidData[country][selection.x] == undefined ||
             state.covidData[country][selection.y] == undefined) {
-          nullIDs.push(country);
+          //nullIDs.push(country);
           continue;
         }
         _data_.push({
@@ -189,13 +196,12 @@ const store = new Vuex.Store({
       // Set the state of view D
       state.dataViewD = _data_;
     },
-    /*prepDataViewE(state, selection) {
-
-    },*/
     setUpMapIsoCodeName(state) {
       for (let feature of mapWorld.features) {
-        if ("iso_a3" in feature.properties && "name" in feature.properties)
+        if ("iso_a3" in feature.properties && "name" in feature.properties) {
           state.mapIsoCodeName[feature.properties.iso_a3] = feature.properties.name;
+          state.mapNameIsoCode[feature.properties.name] = feature.properties.iso_a3;
+        }
       }
       for (let iso_code in state.covidData) {
         if (iso_code.length == 3 && iso_code in state.mapIsoCodeName && "continent" in state.covidData[iso_code])
@@ -212,7 +218,7 @@ const store = new Vuex.Store({
       for (let continent in state.allCountries) {
         state.checkboxContent += `<span class="continent_section"> ${continent.toUpperCase()} </span>`;
         for (let countryName of state.allCountries[continent]) {
-          state.checkboxContent += `<label><input type="checkbox"`;
+          state.checkboxContent += `<label><input type="checkbox" value="${state.mapNameIsoCode[countryName]}"`;
           if (["Austria", "Germany", "France", "Ireland"].includes(countryName))
             state.checkboxContent += " checked";
           state.checkboxContent += `/> ${countryName} </label></br>`;
@@ -230,6 +236,11 @@ const store = new Vuex.Store({
     },
     changeControlCsize(state, val) {
       state.controlC.featSize = val;
+    },
+    changeControlCcountry(state, val) {
+      state.controlC.country = val.iso_code;
+      state.controlC.checked = val.checked;
+      state.controlC.target = val.target;
     },
   },
   getters: {
@@ -255,6 +266,9 @@ const store = new Vuex.Store({
     controlCfeatY: state => state.controlC.featY,
     controlCcolor: state => state.controlC.featCol,
     controlCsize: state => state.controlC.featSize,
+    controlCcountry: state => state.controlC.country,
+    controlCchecked: state => state.controlC.checked,
+    controlCtarget: state => state.controlC.target,
     // D
   },
   actions: {
@@ -263,7 +277,7 @@ const store = new Vuex.Store({
         // Freeze the data object, since values only need to be read
         // 1) decrease memory usage and 2) speed up initial loading times
         Object.freeze(data);
-        // Parse entire dataset
+        // Add entire dataset to state of Vuex store
         context.state.covidData = data;
         // Set up map between Iso code and full country name
         context.commit("setUpMapIsoCodeName");

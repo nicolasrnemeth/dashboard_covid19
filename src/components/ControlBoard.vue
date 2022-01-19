@@ -128,7 +128,6 @@ export default {
     this.setUpSelectionViewC();
     this.setUpSelectionViewD();
     this.setUpCheckboxes();
-
     this.setUpListeners();
   },
   methods: {
@@ -142,15 +141,53 @@ export default {
       d3.select("#viewC_y").on("change", this.handleYC);
       d3.select("#viewC_color").on("change", this.handleColorC);
       d3.select("#viewC_size").on("change", this.handleSizeC);
+      // Country list
+      let divC = document.querySelector('#checkboxes_viewC');
+      let checkboxesViewC = divC.querySelectorAll('input[type="checkbox"]');
+      checkboxesViewC.forEach(checkbox => checkbox.addEventListener("change", this.handleCheckboxesC));
       // Control D
+    },
+    handleCheckboxesB() {
+      
+    },
+    handleCheckboxesC(event) {
+      if (event.target.checked) {
+        this.$store.commit("changeControlCcountry", {
+          iso_code: event.target.value,
+          checked: true,
+          target: event.target,
+        });
+      }
+      else {
+        if (document.getElementById(`${event.target.value}_point`)) {
+          document.getElementById(`${event.target.value}_point`).remove();
+          document.getElementById(`${event.target.value}_pointlabel`).remove();
+          this.$store.commit("changeControlCcountry", {
+            iso_code: event.target.value,
+            checked: false,
+            target: event.target,
+          });
+        }
+      }
+    },
+    handleCheckboxesD() {
+
     },
     handleControlA(event) {
      this.$store.commit("changeControlA", event.target.value);
     },
     handleXC(event) {
+      let divC = document.querySelector('#checkboxes_viewC');
+      let checkboxesViewC = divC.querySelectorAll('input[type="checkbox"]');
+      checkboxesViewC.forEach(d => d.disabled=false);
+
       this.$store.commit("changeControlCfeatX", event.target.value);
     },
     handleYC(event) {
+      let divC = document.querySelector('#checkboxes_viewC');
+      let checkboxesViewC = divC.querySelectorAll('input[type="checkbox"]');
+      checkboxesViewC.forEach(d => d.disabled=false);
+      
       this.$store.commit("changeControlCfeatY", event.target.value);
     },
     handleColorC(event) {
@@ -184,8 +221,8 @@ export default {
     setUpSelectionViewC() {
       let selectX = "";
       let selectY = "";
-      let selectColor = "";
-      let selectSize = "";
+      let selectColor = `<option value="None" style="font-weight: bold;">None</option>`;
+      let selectSize = `<option value="None" style="font-weight: bold;">None</option>`;
       for (let feature of this.viewC_features) {
         selectX += `<option value="${feature}"`;
         selectY += `<option value="${feature}"`;
