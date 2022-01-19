@@ -64,7 +64,7 @@ export default {
     },
     setUpToolTipB() {
       // Define that toolTip does not disappear should user move mouse faster
-      // than the tooltip moves should that the invisible rect does not trigger
+      // than the tooltip moves such that the invisible rect does not trigger
       // anymore the mouse events
       d3.select("#toolTip-B")
         .on("mousemove", this.rectMouseMove)
@@ -186,8 +186,8 @@ export default {
 
       // Add id to collection of current chart ids
       this.currentCharts[`${this.country}${this.feature}`] = {
-        country: this.country,
-        feature: this.feature,
+        country: this.country.slice(),
+        feature: this.feature.slice(),
         data: [...this.chartData],
       };
 

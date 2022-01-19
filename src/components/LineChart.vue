@@ -47,7 +47,7 @@ export default {
     this.createChart();
     this.updateLegend();
     this.createXAxisLabel("Date (month / year)");
-    this.createYAxisLabel(this.formatFeatureText(this.currentFeatureSelection));
+    this.createYAxisLabel(this.formatFeatureText(this.currentFeatureSelection) + ((this.percentageValues.includes(this.currentFeatureSelection)) ? " %" : ""));
   },
   methods: {
     setInitialData() {
@@ -328,7 +328,11 @@ export default {
     },
     addSpacing(minVal, maxVal, down=0.02, up=1.07) {
       return [minVal-down*maxVal, up*maxVal];
-    }
+    },
+    removeLines() {
+      if (! d3.selectAll(".linesD").empty())
+        document.querySelectorAll(".linesD").forEach(l => l.remove());
+    },
   },
   computed: {
     covidData: {
@@ -355,27 +359,94 @@ export default {
     },
     controlDfeature: {
       get() {
-        return this.$store.getters.controlD.feature;
+        return this.$store.getters.controlDfeature;
       }
     },
     controlDcountry: {
       get() {
-        return this.$store.getters.controlD.country;
+        return this.$store.getters.controlDcountry;
       }
     },
     controlDchecked: {
       get() {
-        return this.$store.getters.controlD.checked;
+        return this.$store.getters.controlDchecked;
       }
     },
     controlDtarget: {
       get() {
-        return this.$store.getters.controlD.target;
+        return this.$store.getters.controlDtarget;
+      }
+    },
+    percentageValues: {
+      get() {
+        return this.$store.getters.percentageValues;
       }
     },
   },
   watch: {
-    
+    controlDfeature: {
+      handler: function() {
+        this.currentFeatureSelection = this.controlDfeature;
+
+        let _data_ = [];
+        //let daysCount = 0;
+        for (let country of this.selectedCountries) 
+          for (let day of this.covidData[country].data) {
+            //daysCount++;
+            // Track and omit null values
+            if ( ! (this.currentFeatureSelection in day))
+              continue
+            let date = d3.timeParse("%Y-%m-%d")(day.date);
+            if (! date) continue;
+  
+            _data_.push({
+              iso_code: country,
+              x: date,
+              y: day[this.currentFeatureSelection],
+            });
+          }
+        
+        //grouped_data_ = d3.group(_data_, d => d.iso_code);
+        this.data_ = _data_;
+
+        this.removeLines();
+
+        this.createChart();
+        this.updateLegend();
+        this.createYAxisLabel(this.formatFeatureText(this.currentFeatureSelection) + ((this.percentageValues.includes(this.currentFeatureSelection)) ? " %" : ""));
+      },
+      deep: true,
+    },
+    controlDcountry: {
+      handler: function() {
+        let controlDcountry_ = this.controlDcountry.slice(0, 3);
+
+        if (this.controlDchecked) {
+          for (let day of this.covidData[controlDcountry_].data) {
+            if (! ("date" in day) || day.date == undefined || day.date == null)
+              continue;
+            if (this.currentFeatureSelection in day) {
+              this.data_.push({
+                iso_code: controlDcountry_,
+                x: d3.timeParse("%Y-%m-%d")(day.date),
+                y: day[this.currentFeatureSelection],
+              })
+            }
+          }
+          this.selectedCountries.push(controlDcountry_);
+          this.removeLines();
+
+          this.createChart();
+          this.updateLegend();
+          this.createYAxisLabel(this.formatFeatureText(this.currentFeatureSelection) + ((this.percentageValues.includes(this.currentFeatureSelection)) ? " %" : ""));
+        }
+        if (!this.controlDchecked) {
+          this.data_ = this.data_.filter(d => d.iso_code != controlDcountry_);
+          this.selectedCountries = this.selectedCountries.filter(iso_code => iso_code != controlDcountry_);
+          this.updateLegend();
+        }
+      }
+    }
   },
 }
 
@@ -418,7 +489,7 @@ export default {
   font-size: calc((1.6vh + 0.8vw)/2);
   font-family: Baskerville;
   top: 0px;
-  left: 1%;
+  left: 11%;
   text-align: start !important;
   text-anchor: start !important;
   font-weight: bold !important;

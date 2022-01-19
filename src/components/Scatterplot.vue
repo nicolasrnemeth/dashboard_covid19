@@ -47,8 +47,8 @@ export default {
     this.setUpToolTipCAndDiv();
     this.createChart();
     this.setUpColorPalette();
-    this.createXAxisLabel(this.formatFeatureText(this.xFeature));
-    this.createYAxisLabel(this.formatFeatureText(this.yFeature));
+    this.createXAxisLabel(this.formatFeatureText(this.xFeature) + ((this.percentageValues.includes(this.xFeature)) ? " %" : ""));
+    this.createYAxisLabel(this.formatFeatureText(this.yFeature) + ((this.percentageValues.includes(this.yFeature)) ? " %" : ""));
     this.resizePoints();
     this.colorPoints();
   },
@@ -587,7 +587,12 @@ export default {
       get() {
         return this.$store.getters.controlCtarget;
       }
-    }
+    },
+    percentageValues: {
+      get() {
+        return this.$store.getters.percentageValues;
+      }
+    },
   },
   watch: {
     controlCfeatX: {
@@ -597,25 +602,58 @@ export default {
           if (this.xFeature in this.covidData[this.data_[dataIdx].iso_code])
             this.data_[dataIdx].x = this.covidData[this.data_[dataIdx].iso_code][this.xFeature];
           else {
+            let foundByDate = false;
             for (let idx_=this.covidData[this.data_[dataIdx].iso_code].data.length-1; idx_ >= 0; idx_--) {
               if (this.xFeature in this.covidData[this.data_[dataIdx].iso_code].data[idx_]) {
                 if (this.covidData[this.data_[dataIdx].iso_code].data[idx_][this.xFeature] < 0)
                   continue;
                 this.data_[dataIdx].x = this.covidData[this.data_[dataIdx].iso_code].data[idx_][this.xFeature];
+                foundByDate = true;
                 break;
               }
             }
+            if (! foundByDate)
+              this.data_[dataIdx].x == null;
           }
         }
-        this.removeLabelsNPoints();
+        // Remove countries where x contains a null value and therefore cannot be visualized
+        let remove_countries = [];
+        let new_list = [];
+        let data_copy = [...this.data_];
+        for (let idx_=0; idx_ < this.data_.length; idx_++) {
+          if (this.data_[idx_].x == null)
+            remove_countries.push(this.data_[idx_].iso_code.slice());
+          else
+            new_list.push(this.data_[idx_]);
+        }
+        let divC = document.querySelector('#checkboxes_viewC');
+        let checkboxesViewC = divC.querySelectorAll('input[type="checkbox"]');
+        for (let checkbox of checkboxesViewC) {
+          if (checkbox.value in remove_countries)
+            checkbox.checked = false;
+            checkbox.disabled = true;
+        }
 
-        this.createChart();
-        this.createXAxisLabel(this.formatFeatureText(this.xFeature));
-        this.createYAxisLabel(this.formatFeatureText(this.yFeature));
-        if (this.sizeChannelFeature != "None")
-          this.resizePoints();
-        if (this.colorChannelFeature != "None")
-          this.colorPoints();
+        this.data_ = new_list;
+        this.selectedCountries.filter(iso_code => ! (iso_code in remove_countries));
+
+        
+        if (! (this.data_.length == 0)) {
+          this.removeLabelsNPoints();
+  
+          this.createChart();
+          this.createXAxisLabel(this.formatFeatureText(this.xFeature) + ((this.percentageValues.includes(this.xFeature)) ? " %" : ""));
+          this.createYAxisLabel(this.formatFeatureText(this.yFeature) + ((this.percentageValues.includes(this.yFeature)) ? " %" : ""));
+          if (this.sizeChannelFeature != "None")
+            this.resizePoints();
+          if (this.colorChannelFeature != "None")
+            this.colorPoints();
+        }
+        else {
+          this.data_ = data_copy;
+          alert(`The data could not be plotted, because for the selected
+                 feature no selected country contains a value that is not null.`);
+        }
       },
       deep: true,
     },
@@ -626,25 +664,57 @@ export default {
           if (this.yFeature in this.covidData[this.data_[dataIdx].iso_code])
             this.data_[dataIdx].y = this.covidData[this.data_[dataIdx].iso_code][this.yFeature];
           else {
+            let foundByDate = false;
             for (let idx_=this.covidData[this.data_[dataIdx].iso_code].data.length-1; idx_ >= 0; idx_--) {
               if (this.yFeature in this.covidData[this.data_[dataIdx].iso_code].data[idx_]) {
                 if (this.covidData[this.data_[dataIdx].iso_code].data[idx_][this.yFeature] < 0)
                   continue;
                 this.data_[dataIdx].y = this.covidData[this.data_[dataIdx].iso_code].data[idx_][this.yFeature];
+                foundByDate = true;
                 break;
               }
             }
+            if (! foundByDate)
+              this.data_[dataIdx].y == null;
           }
         }
-        this.removeLabelsNPoints();
+        // Remove countries where x contains a null value and therefore cannot be visualized
+        let remove_countries = [];
+        let new_list = [];
+        let data_copy = [...this.data_];
+        for (let idx_=0; idx_ < this.data_.length; idx_++) {
+          if (this.data_[idx_].x == null)
+            remove_countries.push(this.data_[idx_].iso_code.slice());
+          else
+            new_list.push(this.data_[idx_]);
+        }
+        let divC = document.querySelector('#checkboxes_viewC');
+        let checkboxesViewC = divC.querySelectorAll('input[type="checkbox"]');
+        for (let checkbox of checkboxesViewC) {
+          if (checkbox.value in remove_countries)
+            checkbox.checked = false;
+            checkbox.disabled = true;
+        }
 
-        this.createChart();
-        this.createXAxisLabel(this.formatFeatureText(this.xFeature));
-        this.createYAxisLabel(this.formatFeatureText(this.yFeature));
-        if (this.sizeChannelFeature != "None")
-          this.resizePoints();
-        if (this.colorChannelFeature != "None")
-          this.colorPoints();
+        this.data_ = new_list;
+        this.selectedCountries.filter(iso_code => ! (iso_code in remove_countries));
+
+        if (! (this.data_.length == 0)) {
+          this.removeLabelsNPoints();
+  
+          this.createChart();
+          this.createXAxisLabel(this.formatFeatureText(this.xFeature) + ((this.percentageValues.includes(this.xFeature)) ? " %" : ""));
+          this.createYAxisLabel(this.formatFeatureText(this.yFeature) + ((this.percentageValues.includes(this.yFeature)) ? " %" : ""));
+          if (this.sizeChannelFeature != "None")
+            this.resizePoints();
+          if (this.colorChannelFeature != "None")
+            this.colorPoints();
+        }
+        else {
+          this.data_ = data_copy;
+          alert(`The data could not be plotted, because for the selected
+                 feature no selected country contains a value that is not null.`);
+        }
       },
       deep: true,
     },
@@ -664,37 +734,39 @@ export default {
     },
     controlCcountry: {
       handler: function() {
+        let controlCcountry_ = this.controlCcountry.slice(0, 3);
+
         if (this.controlCchecked) {
           let xValue = undefined;
           let yValue = undefined;
 
-          if (this.yFeature in this.covidData[this.controlCcountry])
-            yValue = this.covidData[this.controlCcountry][this.yFeature];
+          if (this.yFeature in this.covidData[controlCcountry_])
+            yValue = this.covidData[controlCcountry_][this.yFeature];
           else {
-            for (let idx_=this.covidData[this.controlCcountry].data.length-1; idx_ >= 0; idx_--) {
-              if (this.yFeature in this.covidData[this.controlCcountry].data[idx_]) {
-                if (this.covidData[this.controlCcountry].data[idx_][this.yFeature] < 0)
+            for (let idx_=this.covidData[controlCcountry_].data.length-1; idx_ >= 0; idx_--) {
+              if (this.yFeature in this.covidData[controlCcountry_].data[idx_]) {
+                if (this.covidData[controlCcountry_].data[idx_][this.yFeature] < 0)
                   continue;
-                yValue = this.covidData[this.controlCcountry].data[idx_][this.yFeature];
+                yValue = this.covidData[controlCcountry_].data[idx_][this.yFeature];
                 break;
               }
             }
           }
-          if (this.xFeature in this.covidData[this.controlCcountry])
-            xValue = this.covidData[this.controlCcountry][this.xFeature];
+          if (this.xFeature in this.covidData[controlCcountry_])
+            xValue = this.covidData[controlCcountry_][this.xFeature];
           else {
-            for (let idx_=this.covidData[this.controlCcountry].data.length-1; idx_ >= 0; idx_--) {
-              if (this.xFeature in this.covidData[this.controlCcountry].data[idx_]) {
-                if (this.covidData[this.controlCcountry].data[idx_][this.xFeature] < 0)
+            for (let idx_=this.covidData[controlCcountry_].data.length-1; idx_ >= 0; idx_--) {
+              if (this.xFeature in this.covidData[controlCcountry_].data[idx_]) {
+                if (this.covidData[controlCcountry_].data[idx_][this.xFeature] < 0)
                   continue;
-                xValue = this.covidData[this.controlCcountry].data[idx_][this.xFeature];
+                xValue = this.covidData[controlCcountry_].data[idx_][this.xFeature];
                 break;
               }
             }
           }
 
           let countryObj = {
-            iso_code: this.controlCcountry.slice(),
+            iso_code: controlCcountry_,
             x: xValue,
             y: yValue,
           };
@@ -717,15 +789,15 @@ export default {
             if (countryObj.x == undefined)
               alert(`Country could not be added, because its x-value is null. 
                      Countries for which a certain feature is undefined will be disabled,
-                    until the respective another feature for x-axis encoding is selected.`);
+                     until respective another feature for the x-axis encoding is selected.`);
             else
               alert(`Country could not be added, because its y-value is null. 
                      Countries for which a certain feature is undefined will be disabled,
-                     until the respective another feature for y-axis encoding is selected.`);
+                     until another feature for the y-axis encoding is selected.`);
           }
         }
         if (!this.controlCchecked) {
-          this.data_ = this.data_.filter(d => d.iso_code != this.controlCcountry);
+          this.data_ = this.data_.filter(d => d.iso_code != controlCcountry_);
           this.selectedCountries = d3.map(this.data_, d => d.iso_code);
         }
       },

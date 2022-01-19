@@ -97,7 +97,7 @@ export default {
         "total_vaccinations_per_hundred", "people_vaccinated_per_hundred", "people_fully_vaccinated_per_hundred", "total_boosters_per_hundred",
         "total_cases", "new_cases", "new_cases_smoothed", "total_deaths", "new_deaths", "new_deaths_smoothed", "excess_mortality", "excess_mortality_cumulative_absolute",
         "icu_patients", "hosp_patients", "weekly_icu_admissions", "weekly_hosp_admissions", "total_tests", "new_tests", "new_tests_smoothed",
-        "total_vaccinations", "people_vaccinated", "people_fully_vaccinated", "total_boosters", "new_deaths_smoothed_per_million",
+        "total_vaccinations", "people_vaccinated", "people_fully_vaccinated", "total_boosters",
         "new_cases_smoothed_per_million", "new_deaths_smoothed_per_million"
       ],
       initiallySelectedCountries: [
@@ -135,7 +135,11 @@ export default {
       // Control A
       d3.select("#viewA_selection").on("change", this.handleControlA);
       // Control B
-
+      d3.select("#viewB_selection").on("change", this.handleControlB);
+      // Country list
+      let divB = document.querySelector('#checkboxes_viewB');
+      let checkboxesViewB = divB.querySelectorAll('input[type="checkbox"]');
+      checkboxesViewB.forEach(checkbox => checkbox.addEventListener("change", this.handleCheckboxesB));
       // Control C
       d3.select("#viewC_x").on("change", this.handleXC);
       d3.select("#viewC_y").on("change", this.handleYC);
@@ -146,9 +150,44 @@ export default {
       let checkboxesViewC = divC.querySelectorAll('input[type="checkbox"]');
       checkboxesViewC.forEach(checkbox => checkbox.addEventListener("change", this.handleCheckboxesC));
       // Control D
+      d3.select("#viewD_selection").on("change", this.handleControlD);
+      // Country list
+      let divD = document.querySelector('#checkboxes_viewD');
+      let checkboxesViewD = divD.querySelectorAll('input[type="checkbox"]');
+      checkboxesViewD.forEach(checkbox => checkbox.addEventListener("change", this.handleCheckboxesD));
     },
-    handleCheckboxesB() {
-      
+    handleCheckboxesB(event) {
+      let divB = document.querySelector('#checkboxes_viewB');
+      let checkboxesViewB = divB.querySelectorAll('input[type="checkbox"]:checked');
+      if (checkboxesViewB.length >= 9) {
+        event.target.checked = false;
+        let uncheckedBoxesViewB = divB.querySelectorAll('input[type="checkbox"]:not(:checked)');
+        for (let checkbox of uncheckedBoxesViewB) {
+          checkbox.disabled = true;
+        }
+        alert("Please note that you can select up to 8 countries.");
+      }
+      else {
+        let uncheckedBoxesViewB = divB.querySelectorAll('input[type="checkbox"]:not(:checked)');
+        for (let checkbox of uncheckedBoxesViewB) {
+          checkbox.disabled = false;
+        }
+      }
+
+      if (event.target.checked) {
+        this.$store.commit("changeControlBcountry", {
+          iso_code: event.target.value,
+          checked: true,
+          target: event.target,
+        });
+      }
+      else {
+        this.$store.commit("changeControlBcountry", {
+          iso_code: event.target.value,
+          checked: false,
+          target: event.target,
+        });
+      }
     },
     handleCheckboxesC(event) {
       if (event.target.checked) {
@@ -170,11 +209,54 @@ export default {
         }
       }
     },
-    handleCheckboxesD() {
+    handleCheckboxesD(event) {
+      // Disable further country selection when currently 12 countries are selected
+      // because this is the maximum number of countries I decided to encode simultaneously by colors
+      // More than 12 countries could not be encoded easily anymore without decreasing distinguishability
+      // between them
+      let divD = document.querySelector('#checkboxes_viewD');
+      let checkboxesViewD = divD.querySelectorAll('input[type="checkbox"]:checked');
+      if (checkboxesViewD.length >= 13) {
+        event.target.checked = false;
+        let uncheckedBoxesViewD = divD.querySelectorAll('input[type="checkbox"]:not(:checked)');
+        for (let checkbox of uncheckedBoxesViewD) {
+          checkbox.disabled = true;
+        }
+        alert("To maintain overview in the chart, please note that you can only select up to 12 countries.");
+      }
+      else {
+        let uncheckedBoxesViewD = divD.querySelectorAll('input[type="checkbox"]:not(:checked)');
+        for (let checkbox of uncheckedBoxesViewD) {
+          checkbox.disabled = false;
+        }
+      }
 
+      if (event.target.checked) {
+        this.$store.commit("changeControlDcountry", {
+          iso_code: event.target.value,
+          checked: true,
+          target: event.target,
+        });
+      }
+      else {
+        if (document.getElementById(`${event.target.value}_lineD`)) {
+          document.getElementById(`${event.target.value}_lineD`).remove();
+          this.$store.commit("changeControlDcountry", {
+            iso_code: event.target.value,
+            checked: false,
+            target: event.target,
+          });
+        }
+      }
     },
     handleControlA(event) {
      this.$store.commit("changeControlA", event.target.value);
+    },
+    handleControlB(event) {
+      this.$store.commit("changeControlB", event.target.value);
+    },
+    handleControlD(event) {
+      this.$store.commit("changeControlD", event.target.value);
     },
     handleXC(event) {
       let divC = document.querySelector('#checkboxes_viewC');

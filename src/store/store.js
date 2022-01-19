@@ -238,19 +238,28 @@ const store = new Vuex.Store({
       state.controlC.featSize = val;
     },
     changeControlCcountry(state, val) {
-      state.controlC.country = val.iso_code;
+      if (state.controlC.country != val.iso_code)
+        state.controlC.country = val.iso_code;
+      else 
+        state.controlC.country = val.iso_code + "_";
       state.controlC.checked = val.checked;
       state.controlC.target = val.target;
     },
     changeControlBcountry(state, val) {
-      state.controlB.country = val.iso_code;
+      if (state.controlB.country != val.iso_code)
+        state.controlB.country = val.iso_code;
+      else 
+        state.controlB.country = val.iso_code + "_";
       state.controlB.checked = val.checked;
       state.controlB.target = val.target;
     },
     changeControlDcountry(state, val) {
-      state.controlC.country = val.iso_code;
-      state.controlC.checked = val.checked;
-      state.controlC.target = val.target;
+      if (state.controlD.country != val.iso_code)
+        state.controlD.country = val.iso_code;
+      else
+        state.controlD.country = val.iso_code + "_";
+      state.controlD.checked = val.checked;
+      state.controlD.target = val.target;
     },
     changeControlB(state, val) {
       state.controlB.feature = val;
