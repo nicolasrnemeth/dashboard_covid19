@@ -284,6 +284,26 @@ export default {
         return this.$store.getters.dataViewB;
       }
     },
+    controlBfeature: {
+      get() {
+        return this.$store.getters.controlB.feature;
+      }
+    },
+    controlBcountry: {
+      get() {
+        return this.$store.getters.controlB.country;
+      }
+    },
+    controlBchecked: {
+      get() {
+        return this.$store.getters.controlB.checked;
+      }
+    },
+    controlBtarget: {
+      get() {
+        return this.$store.getters.controlB.target;
+      }
+    },
   },
   watch: {
     

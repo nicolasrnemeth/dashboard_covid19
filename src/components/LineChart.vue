@@ -352,7 +352,27 @@ export default {
       return d3.scaleLinear()
                .domain([minVal, maxVal])
                .range([this.svgHeight - this.svgPadding.top - this.svgPadding.bottom, 0]);
-    }
+    },
+    controlDfeature: {
+      get() {
+        return this.$store.getters.controlD.feature;
+      }
+    },
+    controlDcountry: {
+      get() {
+        return this.$store.getters.controlD.country;
+      }
+    },
+    controlDchecked: {
+      get() {
+        return this.$store.getters.controlD.checked;
+      }
+    },
+    controlDtarget: {
+      get() {
+        return this.$store.getters.controlD.target;
+      }
+    },
   },
   watch: {
     

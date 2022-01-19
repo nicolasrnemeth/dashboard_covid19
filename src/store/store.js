@@ -242,6 +242,22 @@ const store = new Vuex.Store({
       state.controlC.checked = val.checked;
       state.controlC.target = val.target;
     },
+    changeControlBcountry(state, val) {
+      state.controlB.country = val.iso_code;
+      state.controlB.checked = val.checked;
+      state.controlB.target = val.target;
+    },
+    changeControlDcountry(state, val) {
+      state.controlC.country = val.iso_code;
+      state.controlC.checked = val.checked;
+      state.controlC.target = val.target;
+    },
+    changeControlB(state, val) {
+      state.controlB.feature = val;
+    },
+    changeControlD(state, val) {
+      state.controlD.feature = val;
+    },
   },
   getters: {
     dataViewA: state => state.dataViewA,
@@ -261,6 +277,10 @@ const store = new Vuex.Store({
     // A
     controlA: state => state.controlA,
     // B
+    controlBfeature: state => state.controlB.feature,
+    controlBtarget: state => state.controlB.target,
+    controlBchecked: state => state.controlB.checked,
+    controlBcountry: state => state.controlB.country,
     // C
     controlCfeatX: state => state.controlC.featX,
     controlCfeatY: state => state.controlC.featY,
@@ -270,6 +290,10 @@ const store = new Vuex.Store({
     controlCchecked: state => state.controlC.checked,
     controlCtarget: state => state.controlC.target,
     // D
+    controlDfeature: state => state.controlD.feature,
+    controlDtarget: state => state.controlD.target,
+    controlDchecked: state => state.controlD.checked,
+    controlDcountry: state => state.controlD.country,
   },
   actions: {
     loadNPrepData(context) {
