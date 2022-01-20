@@ -24,6 +24,8 @@ export default {
       labelXByFeature: true,
       currentCharts: {},
       data_: [],
+      selectedCountries: ["AUT", "DEU", "FRA", "IRL"],
+      currentFeature: "new_cases_smoothed_per_million",
       country: "",
       feature: "",
       chartData: [],
@@ -55,12 +57,8 @@ export default {
       for (let d_ of this.data_)
         this.addNewChart(d_.country, d_.feature, d_.data);
       
-      if (this.labelXByFeature) {
-        let formattedXLabel = this.formatFeatureText(Object.values(this.currentCharts)[0].feature);
-        this.createXAxisLabel(formattedXLabel);
-      }
-      else
-        this.createXAxisLabel(Object.values(this.currentCharts)[0].country);
+      let formattedXLabel = this.formatFeatureText(this.currentFeature);
+      this.createXAxisLabel(formattedXLabel);
     },
     setUpToolTipB() {
       // Define that toolTip does not disappear should user move mouse faster
@@ -91,25 +89,31 @@ export default {
           yValues.push(obj.data[idx-1].y);
           continue;
         }
-        yValues.push(obj.data[idx].y);
+        if (obj.data[idx])
+          yValues.push(obj.data[idx].y);
+        else
+          yValues.push(null);
       }
       // Format and prep content for tool tip
       let toolTipContent = "<strong>Date: " + d3.timeFormat("%m/%d/%y")(date) + "</strong><br/>";
       let idxY = 0;
       for (let chartObj of Object.values(this.currentCharts)) {
         if (this.labelXByFeature) {
-          toolTipContent += `${chartObj.country}: ${yValues[idxY]}`;
+          toolTipContent += `${chartObj.country}: ${yValues[idxY]}` + ((this.percentageValues.includes(this.currentFeature) ? " %": ""));
           if (idxY < yValues.length-1)
             toolTipContent += "<br/>";
         }
         else {
-          toolTipContent += `${this.formatFeatureText(chartObj.feature)}:  ${yValues[idxY]}`;
+          toolTipContent += `${this.formatFeatureText(chartObj.feature)}:  ${yValues[idxY]}` + ((this.percentageValues.includes(this.currentFeature) ? " %": ""));
         }
         idxY++;
       } 
       // Update content and position of toolTipB
       const domElem = d3.select("#ViewB_").node();
       let [x, y] = d3.pointer(event, domElem);
+      
+      document.getElementById("mouse-line").style.left = `${x-8}px`;
+
       let [oDivWidth, oDivHeight] = [domElem.clientWidth, domElem.clientHeight];
       let tTB = d3.select("#toolTip-B")
                   .html(`${toolTipContent}`);
@@ -132,9 +136,6 @@ export default {
         tTB.style("left", `${x-tTw-20}px`)
            .style("top", `${y}px`);
       }
-
-      d3.select("#mouse-line")
-        .style("left", `${x}px`);
     },
     rectMouseLeave() {
       d3.select("#toolTip-B")
@@ -248,7 +249,6 @@ export default {
           .attr("d", area);
     },
     createYAxisLabel(chartID, label) {
-      //let h = document.getElementById(`div${chartID}`).clientHeight;
       d3.select(`#div${chartID}`)
         .append("span")
         .attr("class", "yLabels")
@@ -264,6 +264,11 @@ export default {
     },
   },
   computed: {
+    covidData: {
+      get() {
+        return this.$store.getters.covidData;
+      }
+    },
     minmaxDateRange: {
       get() {
         return this.$store.getters.extentDatesViewB;
@@ -286,27 +291,95 @@ export default {
     },
     controlBfeature: {
       get() {
-        return this.$store.getters.controlB.feature;
+        return this.$store.getters.controlBfeature;
       }
     },
     controlBcountry: {
       get() {
-        return this.$store.getters.controlB.country;
+        return this.$store.getters.controlBcountry;
       }
     },
     controlBchecked: {
       get() {
-        return this.$store.getters.controlB.checked;
+        return this.$store.getters.controlBchecked;
       }
     },
     controlBtarget: {
       get() {
-        return this.$store.getters.controlB.target;
+        return this.$store.getters.controlBtarget;
+      }
+    },
+    percentageValues: {
+      get() {
+        return this.$store.getters.percentageValues;
       }
     },
   },
   watch: {
-    
+    controlBfeature: {
+      handler: function() {
+        // Remove current charts
+        for (let chart of Object.values(this.currentCharts)) {
+          this.removeChart(chart.country, chart.feature);
+        }
+
+        this.currentFeature = this.controlBfeature;
+        let newData = [];
+        for (let country_ of this.selectedCountries) {
+          let obj = {
+            country: country_.slice(),
+            feature: this.currentFeature.slice(),
+            data: [],
+          }
+          for (let day of this.covidData[country_].data) {
+            if (! ("date" in day) || day.date == undefined || day.date == null) continue;
+            if (this.currentFeature in day) 
+              obj.data.push({
+                x: d3.timeParse("%Y-%m-%d")(day.date),
+                y: day[this.currentFeature],
+              });
+          }
+          newData.push(obj);
+        }
+        this.data_ = newData;
+        this.addChartsAndAddXTitle();
+      },
+      deep: true,
+    },
+    controlBcountry: {
+      handler: function() {
+        let controlBcountry_ = this.controlBcountry.slice(0, 3);
+
+        if (this.controlBchecked && this.selectedCountries.length < 8) {
+          let data_new = [];
+          this.selectedCountries.push(controlBcountry_);
+
+          for (let day of this.covidData[controlBcountry_].data) {
+            if (! ("date" in day) || day.date == undefined || day.date == null) continue;
+            if (this.currentFeature in day) 
+              data_new.push({
+                x: d3.timeParse("%Y-%m-%d")(day.date),
+                y: day[this.currentFeature],
+              });
+          }
+          // Add new chart
+          this.addNewChart(controlBcountry_, this.currentFeature, data_new);
+        }
+        if (! this.controlBchecked) {
+          this.removeChart(controlBcountry_, this.currentFeature);
+          const idx = this.selectedCountries.indexOf(controlBcountry_);
+          if (idx > -1) {
+            this.selectedCountries.splice(idx, 1);
+          }
+        }
+        console.log(this.controlBcountry)
+        console.log(this.controlBfeature)
+        console.log(this.controlBchecked)
+        console.log(this.selectedCountries);
+        console.log(this.currentCharts);
+      },
+      deep: true,
+    }
   },
 }
 
@@ -375,7 +448,6 @@ export default {
   width: 0px;
   height: 46.5%;
   border: 1px solid rgba(0,0,0,0.4);
-  z-index: 1;
   display: none;
 }
 

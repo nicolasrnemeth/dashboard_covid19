@@ -57,7 +57,7 @@ const store = new Vuex.Store({
     controlB: {
       feature: "",
       country: "",
-      ckecked: undefined,
+      checked: undefined,
       target: undefined,
     },
     controlC: {

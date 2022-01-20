@@ -629,9 +629,10 @@ export default {
         let divC = document.querySelector('#checkboxes_viewC');
         let checkboxesViewC = divC.querySelectorAll('input[type="checkbox"]');
         for (let checkbox of checkboxesViewC) {
-          if (checkbox.value in remove_countries)
+          if (checkbox.value in remove_countries) {
             checkbox.checked = false;
             checkbox.disabled = true;
+          }
         }
 
         this.data_ = new_list;
@@ -652,7 +653,8 @@ export default {
         else {
           this.data_ = data_copy;
           alert(`The data could not be plotted, because for the selected
-                 feature no selected country contains a value that is not null.`);
+                 feature no selected country contains a value that is not null.
+                 Or because you do not have any countries selected.`);
         }
       },
       deep: true,
@@ -691,9 +693,10 @@ export default {
         let divC = document.querySelector('#checkboxes_viewC');
         let checkboxesViewC = divC.querySelectorAll('input[type="checkbox"]');
         for (let checkbox of checkboxesViewC) {
-          if (checkbox.value in remove_countries)
+          if (checkbox.value in remove_countries) {
             checkbox.checked = false;
             checkbox.disabled = true;
+          }
         }
 
         this.data_ = new_list;
@@ -713,7 +716,8 @@ export default {
         else {
           this.data_ = data_copy;
           alert(`The data could not be plotted, because for the selected
-                 feature no selected country contains a value that is not null.`);
+                 feature no selected country contains a value that is not null.
+                 Or because you do not have any countries selected.`);
         }
       },
       deep: true,

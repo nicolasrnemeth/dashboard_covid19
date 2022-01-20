@@ -116,7 +116,7 @@ export default {
         let found = false;
         if (d.properties.iso_a3 in this.covidData && this.currentFeatureSelection in this.covidData[d.properties.iso_a3]) {
           found = true;
-          toolTipContent += `${this.covidData[d.properties.iso_a3][this.currentFeatureSelection]}`;
+          toolTipContent += `${this.covidData[d.properties.iso_a3][this.currentFeatureSelection]}` + ((this.percentageValues.includes(this.currentFeatureSelection) ? " %" : ""));
         }
         
         if (! found) {
@@ -126,7 +126,7 @@ export default {
                 if (this.covidData[d.properties.iso_a3].data[idx_][this.currentFeatureSelection] < 0)
                   continue;
                 foundByDate = true;
-                toolTipContent += `${this.covidData[d.properties.iso_a3].data[idx_][this.currentFeatureSelection]}`;
+                toolTipContent += `${this.covidData[d.properties.iso_a3].data[idx_][this.currentFeatureSelection]}` + ((this.percentageValues.includes(this.currentFeatureSelection) ? " %" : ""));
                 break;
               }
             }
@@ -270,6 +270,11 @@ export default {
         return this.$store.getters.controlA;
       }
     },
+    percentageValues: {
+      get() {
+        return this.$store.getters.percentageValues;
+      }
+    }
   },
   watch: {
     controlA: {

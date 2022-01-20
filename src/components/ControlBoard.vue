@@ -165,28 +165,29 @@ export default {
         for (let checkbox of uncheckedBoxesViewB) {
           checkbox.disabled = true;
         }
-        alert("Please note that you can select up to 8 countries.");
+        alert(`To maintain overview in the chart, please note that you can select up to 8 countries.
+               Further country selections are deactivated and reactivated as soon as you deselect at least one country.`);
       }
       else {
         let uncheckedBoxesViewB = divB.querySelectorAll('input[type="checkbox"]:not(:checked)');
         for (let checkbox of uncheckedBoxesViewB) {
           checkbox.disabled = false;
         }
-      }
 
-      if (event.target.checked) {
-        this.$store.commit("changeControlBcountry", {
-          iso_code: event.target.value,
-          checked: true,
-          target: event.target,
-        });
-      }
-      else {
-        this.$store.commit("changeControlBcountry", {
-          iso_code: event.target.value,
-          checked: false,
-          target: event.target,
-        });
+        if (event.target.checked) {
+          this.$store.commit("changeControlBcountry", {
+            iso_code: event.target.value,
+            checked: true,
+            target: event.target,
+          });
+        }
+        else {
+          this.$store.commit("changeControlBcountry", {
+            iso_code: event.target.value,
+            checked: false,
+            target: event.target,
+          });
+        }
       }
     },
     handleCheckboxesC(event) {
@@ -222,30 +223,31 @@ export default {
         for (let checkbox of uncheckedBoxesViewD) {
           checkbox.disabled = true;
         }
-        alert("To maintain overview in the chart, please note that you can only select up to 12 countries.");
+        alert(`To maintain overview in the chart, please note that you can select up to 12 countries.
+               Further selections are deactivated and reactivated as soon as you deselect at least one country.`);
       }
       else {
         let uncheckedBoxesViewD = divD.querySelectorAll('input[type="checkbox"]:not(:checked)');
         for (let checkbox of uncheckedBoxesViewD) {
           checkbox.disabled = false;
         }
-      }
 
-      if (event.target.checked) {
-        this.$store.commit("changeControlDcountry", {
-          iso_code: event.target.value,
-          checked: true,
-          target: event.target,
-        });
-      }
-      else {
-        if (document.getElementById(`${event.target.value}_lineD`)) {
-          document.getElementById(`${event.target.value}_lineD`).remove();
+        if (event.target.checked) {
           this.$store.commit("changeControlDcountry", {
             iso_code: event.target.value,
-            checked: false,
+            checked: true,
             target: event.target,
           });
+        }
+        else {
+          if (document.getElementById(`${event.target.value}_lineD`)) {
+            document.getElementById(`${event.target.value}_lineD`).remove();
+            this.$store.commit("changeControlDcountry", {
+              iso_code: event.target.value,
+              checked: false,
+              target: event.target,
+            });
+          }
         }
       }
     },

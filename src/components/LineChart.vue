@@ -421,7 +421,7 @@ export default {
       handler: function() {
         let controlDcountry_ = this.controlDcountry.slice(0, 3);
 
-        if (this.controlDchecked) {
+        if (this.controlDchecked && this.selectedCountries.length < 12) {
           for (let day of this.covidData[controlDcountry_].data) {
             if (! ("date" in day) || day.date == undefined || day.date == null)
               continue;
